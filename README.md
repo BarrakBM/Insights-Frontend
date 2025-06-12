@@ -32,7 +32,7 @@ This template is designed to be the starting point for full-scale apps with clea
 
 ## 📁 Project Structure
 ```
-androidtemplate/
+insights/
 │
 ├── data/
 │ ├── dtos/
@@ -99,9 +99,9 @@ Example:
 
 This will automatically replace:
 ```bash
-androidtemplate             → yourprojectname
-AndroidTemplate             → YourProjectName
-com.example.androidtemplate → com.yourcompany.yourapp
+insights             → yourprojectname
+Insights             → YourProjectName
+com.nbk.insights → com.yourcompany.yourapp
 ```
 It will work even if it displays red words or unresolved references.
 

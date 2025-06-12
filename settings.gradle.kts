@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AndroidTemplate"
+rootProject.name = "Insights"
 include(":app")
  

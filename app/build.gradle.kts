@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.androidtemplate"
+    namespace = "com.nbk.insights"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.androidtemplate"
+        applicationId = "com.nbk.insights"
         minSdk = 31
         targetSdk = 35
         versionCode = 1
