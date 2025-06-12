@@ -75,11 +75,13 @@ class AuthViewModel(
             try {
                 val response = apiService.login(User(email, password))
                 if (!response.isSuccessful) {
-                    val msg = "Login failed: ${response.message()}"
+                    val errorBody = response.errorBody()?.string()
+                    val msg = errorBody ?: "No error body"
                     Log.w(TAG, msg)
                     setError(msg)
                     return@launch
                 }
+
 
                 val token = response.body()?.token
                 if (token.isNullOrBlank()) {
