@@ -24,10 +24,10 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
     val isLoading by viewModel.isLoading
     val user by viewModel.user
     val token by viewModel.token
-    val errorMessage by viewModel.errorMessage
+    val error by viewModel.errorMessage
 
-    LaunchedEffect(token?.token, user, isLoading) {
-        if (!token?.token.isNullOrBlank() && user != null && !isLoading) {
+    LaunchedEffect(token) {
+        if (token != null) {
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
@@ -109,20 +109,20 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
                 Text("Login", color = Color.White)
             }
 
-            if (!errorMessage.isNullOrBlank()) {
+            if (!error.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(errorMessage!!, color = Color.Red)
+                Text(error!!, color = Color.Red)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Don't have an account? Sign up",
-                color = Color.White,
-                modifier = Modifier.clickable {
-                    navController.navigate(Screen.Register.route)
-                }
-            )
+//            Text(
+//                text = "Don't have an account? Sign up",
+//                color = Color.White,
+//                modifier = Modifier.clickable {
+//                    navController.navigate(Screen.Register.route)
+//                }
+//            )
 
             Spacer(modifier = Modifier.height(64.dp))
         }

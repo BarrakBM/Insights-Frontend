@@ -6,7 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitHelper {
-    private const val baseUrl = "http://10.0.2.2:8080/api/"
+    private const val baseUrl = "http://10.0.2.2:8080/"
 
     fun getInstance(tokenManager: TokenManager): Retrofit {
         val okHttpClient = OkHttpClient.Builder()
