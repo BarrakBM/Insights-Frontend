@@ -5,6 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.nbk.insights.data.dtos.UserDTO
+import com.nbk.insights.data.requests.LoginRequest
 import com.nbk.insights.data.responses.TokenResponse
 import com.nbk.insights.network.AuthApiService
 import com.nbk.insights.utils.TokenManager
@@ -73,7 +74,7 @@ class AuthViewModel(
             setLoading(true)
             Log.d(TAG, "Attempting login for: $email")
             try {
-                val response = apiService.login(UserDTO(email, password))
+                val response = apiService.login(LoginRequest(email, password))
                 if (!response.isSuccessful) {
                     val errorBody = response.errorBody()?.string()
                     val msg = errorBody ?: "No error body"

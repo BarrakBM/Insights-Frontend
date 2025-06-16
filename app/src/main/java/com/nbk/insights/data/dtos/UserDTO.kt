@@ -4,5 +4,6 @@ data class UserDTO(
     var username: String,
     var password: String,
     val id: Long? = null,
-    val token: String? = null
+    val fullName: String,
+    var fcmToken: String? = null
 )
