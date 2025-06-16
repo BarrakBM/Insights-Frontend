@@ -1,6 +1,6 @@
 package com.nbk.insights.data.dtos
 
-data class User(
+data class UserDTO(
     var email: String,
     var password: String,
     val id: Long? = null,

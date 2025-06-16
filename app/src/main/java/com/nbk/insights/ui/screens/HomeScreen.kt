@@ -1,74 +1,31 @@
-package com.nbk.insights.ui.screens
+package  com.nbk.insights.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.nbk.insights.navigation.Screen
-import com.nbk.insights.ui.composables.LoadingIndicator
-import com.nbk.insights.viewmodels.AuthViewModel
-
-@Composable
-fun HomeScreen(viewModel: AuthViewModel, navController: NavController) {
-    val user = viewModel.user.value
-    val isLoading = viewModel.isLoading.value
-
-    if (isLoading) {
-        LoadingIndicator()
-        return
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF262E38)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Welcome ${user?.email ?: "User"}",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "This is your home screen.\nCustomize it to suit your app.",
-                style = MaterialTheme.typography.bodyLarge.copy(color = Color.LightGray),
-                modifier = Modifier.padding(8.dp),
-                lineHeight = 22.sp
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = {
-                    viewModel.logout()
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2ED2C0)),
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                Text("Log out", color = Color.White)
-            }
-        }
-    }
-}
+import androidx.navigation.compose.rememberNavController
+import com.nbk.insights.components.BottomNavigationBar
+import com.nbk.insights.components.CardItem
+import com.nbk.insights.components.TransactionItem
+import com.nbk.insights.components.TotalBalanceCard
+import com.nbk.insights.data.Transaction
+import com.nbk.insights.data.BankCard
+import com.nbk.insights.data.getRecentTransactions
+import com.nbk.insights.data.getBankCards
+import com.nbk.insights.ui.theme.insightsTheme

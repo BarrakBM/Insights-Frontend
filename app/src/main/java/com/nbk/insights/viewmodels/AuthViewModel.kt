@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
-import com.nbk.insights.data.dtos.User
+import com.nbk.insights.data.dtos.UserDTO
 import com.nbk.insights.data.responses.TokenResponse
 import com.nbk.insights.network.AuthApiService
 import com.nbk.insights.utils.TokenManager
@@ -20,8 +20,8 @@ class AuthViewModel(
     private val _token = mutableStateOf<TokenResponse?>(null)
     val token: State<TokenResponse?> get() = _token
 
-    private val _user = mutableStateOf<User?>(null)
-    val user: State<User?> get() = _user
+    private val _user = mutableStateOf<UserDTO?>(null)
+    val user: State<UserDTO?> get() = _user
 
     init {
         Log.i(TAG, "Initializing ViewModel and loading stored token")
@@ -73,7 +73,7 @@ class AuthViewModel(
             setLoading(true)
             Log.d(TAG, "Attempting login for: $email")
             try {
-                val response = apiService.login(User(email, password))
+                val response = apiService.login(UserDTO(email, password))
                 if (!response.isSuccessful) {
                     val errorBody = response.errorBody()?.string()
                     val msg = errorBody ?: "No error body"
