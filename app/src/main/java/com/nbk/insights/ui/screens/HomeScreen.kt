@@ -24,16 +24,28 @@ import com.nbk.insights.ui.composables.TotalBalanceCard
 import com.nbk.insights.data.tempfunctions.getRecentTransactions
 import com.nbk.insights.data.tempfunctions.getBankCards
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.viewmodels.AccountsViewModel
+import com.nbk.insights.viewmodels.AuthViewModel
+import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onViewAllCards: () -> Unit,
     onViewAllTransactions: () -> Unit,
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    accountsViewModel: AccountsViewModel
 ) {
     val recentTransactions = remember { getRecentTransactions() }
     val bankCards = remember { getBankCards() }
+    val firstName = authViewModel.user.value?.fullName?.split(" ")?.firstOrNull() ?: "Guest"
+    val totalBalance = accountsViewModel.totalBalance.value?.totalBalance ?: BigDecimal.ZERO
+
+    LaunchedEffect(Unit) {
+        accountsViewModel.fetchTotalBalance()
+    }
+
 
     Scaffold(
         topBar = {
@@ -41,7 +53,7 @@ fun HomeScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Hello, Humoud",
+                            text = "Hello, $firstName",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -92,7 +104,7 @@ fun HomeScreen(
             // Total Balance Card
             item {
                 TotalBalanceCard(
-                    balance = "KD 4,250.75",
+                    balance = "KD ${totalBalance}",
                     lastUpdated = "Today, 10:45 AM"
                 )
             }
@@ -154,12 +166,14 @@ fun HomeScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview() {
+fun HomeScreenPreview(authViewModel: AuthViewModel, accountsViewModel: AccountsViewModel) {
     InsightsTheme {
         HomeScreen(
             onViewAllCards = { },
             onViewAllTransactions = { },
-            navController = rememberNavController()
+            navController = rememberNavController(),
+            authViewModel = authViewModel,
+            accountsViewModel = accountsViewModel
         )
     }
 }
