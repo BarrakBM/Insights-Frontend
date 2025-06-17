@@ -17,18 +17,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.nbk.insights.ui.composables.BottomNavigationBar
 import com.nbk.insights.ui.composables.CardBarItemWithDropdown
 import com.nbk.insights.ui.composables.CardInsightContent
+import com.nbk.insights.ui.composables.CardBarItem
+import com.nbk.insights.ui.composables.InsightsTabContent
 import com.nbk.insights.data.tempfunctions.getBankCards
 import com.nbk.insights.ui.theme.InsightsTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(navController: NavController) {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Show Insights", "Transactions", "Budget Planning")
     val bankCards = remember { getBankCards() }
     var selectedCardId by remember { mutableStateOf<String?>(null) }
     var selectedAction by remember { mutableStateOf<String?>(null) }
@@ -172,38 +178,95 @@ fun InsightsScreen(navController: NavController) {
                 }
             }
 
+            // Cards List as Bar Items
             items(bankCards) { card ->
-                CardBarItemWithDropdown(
-                    card = card,
-                    onActionSelected = { action ->
-                        selectedCardId = card.lastFourDigits
-                        selectedAction = action
-                        when (action) {
-                            "View All Transactions" -> {
-                                navController.navigate("all_transactions")
-                            }
-                            "Start Budgeting" -> {
-                                // TODO: Navigate to budgeting screen for this card
-                            }
-                        }
-                    }
-                )
+                CardBarItem(card = card)
             }
 
-            if (selectedCardId != null && selectedAction == "View Insights") {
-                item {
-                    val selectedCard = bankCards.find { it.lastFourDigits == selectedCardId }
-                    selectedCard?.let { card ->
-                        CardInsightContent(
-                            card = card,
-                            onDismiss = {
-                                selectedCardId = null
-                                selectedAction = null
+            // Tab Section
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp)),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        // Tab Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            tabs.forEachIndexed { index, title ->
+                                Button(
+                                    onClick = { selectedTab = index },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedTab == index)
+                                            Color(0xFF1E3A8A) else Color.Transparent,
+                                        contentColor = if (selectedTab == index)
+                                            Color.White else Color(0xFF1E3A8A)
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = if (selectedTab == index) 2.dp else 0.dp
+                                    )
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = when(index) {
+                                                0 -> Icons.Default.BarChart
+                                                1 -> Icons.Default.List
+                                                2 -> Icons.Default.TrendingUp
+                                                else -> Icons.Default.BarChart
+                                            },
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        if (selectedTab == index) {
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = when(index) {
+                                                    0 -> "Insights"
+                                                    1 -> "Transactions"
+                                                    2 -> "Budget"
+                                                    else -> "Insights"
+                                                },
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                }
                             }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Tab Content
+                        InsightsTabContent(
+                            selectedTab = selectedTab,
+                            onViewAllTransactions = { navController.navigate("all_transactions") }
                         )
                     }
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun InsightsScreenPreview() {
+    InsightsTheme {
+        InsightsScreen(navController = rememberNavController())
     }
 }

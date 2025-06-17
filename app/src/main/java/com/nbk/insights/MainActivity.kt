@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.nbk.insights.navigation.AppNavigation
 import com.nbk.insights.ui.theme.InsightsTheme
 import com.nbk.insights.utils.AppInitializer
+import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
@@ -26,10 +27,17 @@ class MainActivity : ComponentActivity() {
                 val authViewModel: AuthViewModel = viewModel(
                     factory = AppInitializer.provideAuthViewModelFactory(applicationContext)
                 )
+                val accountsViewModel: AccountsViewModel = viewModel(
+                    factory = AppInitializer.provideAccountsViewModelFactory(applicationContext)
+                )
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
-                        AppNavigation(navController = navController, authViewModel = authViewModel)
+                        AppNavigation(
+                            navController = navController,
+                            authViewModel = authViewModel,
+                            accountsViewModel = accountsViewModel
+                        )
                     }
                 }
             }

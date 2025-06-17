@@ -10,13 +10,29 @@ import com.nbk.insights.ui.screens.LoginScreen
 import com.nbk.insights.viewmodels.AuthViewModel
 
 @Composable
-fun AppNavigation(navController: NavHostController, authViewModel: AuthViewModel) {
+fun AppNavigation(
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    accountsViewModel: AccountsViewModel
+) {
     NavHost(navController = navController, startDestination = Screen.Login.route) {
         composable(Screen.Login.route) {
             LoginScreen(viewModel = authViewModel, navController = navController)
         }
         composable(Screen.Home.route) {
-            HomeScreen(viewModel = authViewModel, navController = navController)
+            HomeScreen(
+                navController = navController,
+                onViewAllCards = { /* TODO: Implement navigation to View All Cards Screen */ },
+                onViewAllTransactions = {
+                    navController.navigate(Screen.AllTransactions.route)
+                },
+                authViewModel = authViewModel,
+                accountsViewModel = accountsViewModel
+            )
+        }
+
+        composable(Screen.Insights.route) {
+            InsightsScreen(navController = navController)
         }
         composable(Screen.Insights.route) {
             InsightsScreen(navController = navController)

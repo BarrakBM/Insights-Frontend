@@ -12,9 +12,9 @@ interface AuthApiService {
     suspend fun register(@Body request: RegisterRequest): Response<TokenResponse>
 
     @POST("auth/login")
-    suspend fun login(@Body user: User): Response<TokenResponse>
+    suspend fun login(@Body user: LoginRequest): Response<TokenResponse>
 
-    @GET("users/me")
-    suspend fun getCurrentUser(): Response<User>
+    @GET("/auth/users/me")
+    suspend fun getCurrentUser(): Response<UserDTO>
 
 }
