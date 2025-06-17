@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.nbk.insights.ui.screens.HomeScreen
-import com.nbk.insights.ui.screens.LoginScreen
-import com.nbk.insights.ui.screens.InsightsScreen
 import com.nbk.insights.ui.screens.AllTransactionsScreen
+import com.nbk.insights.ui.screens.HomeScreen
+import com.nbk.insights.ui.screens.InsightsScreen
+import com.nbk.insights.ui.screens.LoginScreen
 import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.AuthViewModel
 

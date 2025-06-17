@@ -11,14 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.nbk.insights.data.tempfunctions.getAllTransactions
 import com.nbk.insights.ui.composables.TransactionItem
-import com.nbk.insights.ui.theme.InsightsTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,43 +30,29 @@ fun AllTransactionsScreen(navController: NavController) {
                         text = "All Transactions",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1E3A8A)
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
             )
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5)),
-            contentPadding = PaddingValues(16.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(allTransactions) { transaction ->
                 TransactionItem(transaction = transaction)
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AllTransactionsScreenPreview() {
-    InsightsTheme {
-        AllTransactionsScreen(navController = rememberNavController())
     }
 }

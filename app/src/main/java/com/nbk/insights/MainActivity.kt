@@ -3,11 +3,11 @@ package com.nbk.insights
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.nbk.insights.navigation.AppNavigation
@@ -19,11 +19,16 @@ import com.nbk.insights.viewmodels.AuthViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.statusBarColor = Color(0xFF1E3A8A).toArgb()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        WindowCompat.getInsetsController(window, window.decorView)?.apply {
+            isAppearanceLightStatusBars = false // false = white icons
+        }
 
         setContent {
             InsightsTheme {
                 val navController = rememberNavController()
-
                 val authViewModel: AuthViewModel = viewModel(
                     factory = AppInitializer.provideAuthViewModelFactory(applicationContext)
                 )
@@ -31,16 +36,18 @@ class MainActivity : ComponentActivity() {
                     factory = AppInitializer.provideAccountsViewModelFactory(applicationContext)
                 )
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        AppNavigation(
-                            navController = navController,
-                            authViewModel = authViewModel,
-                            accountsViewModel = accountsViewModel
-                        )
-                    }
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    AppNavigation(
+                        navController = navController,
+                        authViewModel = authViewModel,
+                        accountsViewModel = accountsViewModel
+                    )
                 }
             }
         }
     }
 }
+
+

@@ -1,4 +1,4 @@
-package  com.nbk.insights.ui.screens
+package com.nbk.insights.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,20 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.nbk.insights.ui.composables.BottomNavigationBar
-import com.nbk.insights.ui.composables.CardItem
-import com.nbk.insights.ui.composables.TransactionItem
-import com.nbk.insights.ui.composables.TotalBalanceCard
-import com.nbk.insights.data.tempfunctions.getRecentTransactions
-import com.nbk.insights.data.tempfunctions.getBankCards
-import com.nbk.insights.ui.theme.InsightsTheme
-import com.nbk.insights.viewmodels.AccountsViewModel
-import com.nbk.insights.viewmodels.AuthViewModel
+import com.nbk.insights.ui.composables.*
+import com.nbk.insights.data.tempfunctions.*
+import com.nbk.insights.viewmodels.*
 import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,12 +38,11 @@ fun HomeScreen(
         accountsViewModel.fetchTotalBalance()
     }
 
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
+                    Column() {
                         Text(
                             text = "Hello, $firstName",
                             fontSize = 20.sp,
@@ -66,114 +57,61 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Notifications */ }) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color.White
-                        )
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                     }
-                    IconButton(onClick = { /* Profile */ }) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = Color.White
-                        )
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1E3A8A)
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
             )
         },
         bottomBar = {
-            BottomNavigationBar(
-                selectedTab = "Home",
-                navController = navController
-            )
+            BottomNavigationBar(selectedTab = "Home", navController = navController)
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5)),
-            contentPadding = PaddingValues(16.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Total Balance Card
             item {
                 TotalBalanceCard(
                     balance = "KD ${totalBalance}",
                     lastUpdated = "Today, 10:45 AM"
                 )
             }
-
-            // My Cards Section
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "My Cards",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("My Cards", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     TextButton(onClick = onViewAllCards) {
-                        Text(
-                            text = "View All Cards",
-                            color = Color(0xFF1E3A8A)
-                        )
+                        Text("View All Cards", color = Color(0xFF1E3A8A))
                     }
                 }
             }
+            items(bankCards) { CardItem(card = it) }
 
-            // Cards List
-            items(bankCards) { card ->
-                CardItem(card = card)
-            }
-
-            // Recent Transactions Section
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Recent Transactions",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Recent Transactions", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     TextButton(onClick = onViewAllTransactions) {
-                        Text(
-                            text = "View All",
-                            color = Color(0xFF1E3A8A)
-                        )
+                        Text("View All", color = Color(0xFF1E3A8A))
                     }
                 }
             }
-
-            // Recent Transactions List (Last 5)
-            items(recentTransactions.take(5)) { transaction ->
-                TransactionItem(transaction = transaction)
-            }
+            items(recentTransactions.take(5)) { TransactionItem(transaction = it) }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview(authViewModel: AuthViewModel, accountsViewModel: AccountsViewModel) {
-    InsightsTheme {
-        HomeScreen(
-            onViewAllCards = { },
-            onViewAllTransactions = { },
-            navController = rememberNavController(),
-            authViewModel = authViewModel,
-            accountsViewModel = accountsViewModel
-        )
     }
 }
