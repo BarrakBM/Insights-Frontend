@@ -109,6 +109,19 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
                 Text("Login", color = Color.White)
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { viewModel.dummyLogin() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
+                shape = RoundedCornerShape(28.dp)
+            ) {
+                Text("Dummy Login (Test)", color = Color.White)
+            }
+
             if (!errorMessage.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(errorMessage!!, color = Color.Red)

@@ -31,9 +31,7 @@ class AuthViewModel(
     private fun loadStoredToken() {
         val savedToken = tokenManager.getToken()
         Log.i(TAG, "Loaded token from TokenManager: $savedToken")
-
         _token.value = savedToken?.let { TokenResponse(it) }
-
         if (savedToken != null) {
             Log.i(TAG, "Valid token found, proceeding to fetch user")
             fetchCurrentUser()
@@ -81,8 +79,6 @@ class AuthViewModel(
                     setError(msg)
                     return@launch
                 }
-
-
                 val token = response.body()?.token
                 if (token.isNullOrBlank()) {
                     val msg = "Login succeeded but token is empty"
@@ -90,11 +86,9 @@ class AuthViewModel(
                     setError("Empty token")
                     return@launch
                 }
-
                 Log.i(TAG, "Login successful, token received: $token")
                 tokenManager.saveToken(token)
                 _token.value = TokenResponse(token)
-
                 fetchCurrentUser()
             } catch (e: Exception) {
                 val msg = "Login exception: ${e.message}"
@@ -104,6 +98,18 @@ class AuthViewModel(
                 setLoading(false)
             }
         }
+    }
+
+    fun dummyLogin() {
+        Log.i(TAG, "Performing dummy login for testing")
+        val dummyToken = "dummy-jwt-token-123456"
+        val dummyUser = User(email = "test@nbk.com", password = "password123", id = 1L)
+        tokenManager.saveToken(dummyToken)
+        _token.value = TokenResponse(dummyToken)
+        _user.value = dummyUser
+        Log.i(TAG, "Dummy login successful: User = $dummyUser, Token = $dummyToken")
+        setLoading(false)
+        clearError()
     }
 
     fun logout() {
