@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.nbk.insights.network.AccountsApiService
 import com.nbk.insights.network.AuthApiService
 import com.nbk.insights.network.RetrofitHelper
+import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.AuthViewModel
 
 object AppInitializer {
@@ -26,6 +28,22 @@ object AppInitializer {
         return viewModelFactory {
             initializer {
                 AuthViewModel(apiService, tokenManager)
+            }
+        }
+    }
+
+    fun provideAccountsApiService(tokenManager: TokenManager): AccountsApiService {
+        val retrofit = RetrofitHelper.getInstance(tokenManager)
+        return retrofit.create(AccountsApiService::class.java)
+    }
+
+    fun provideAccountsViewModelFactory(context: Context): ViewModelProvider.Factory {
+        val tokenManager = provideTokenManager(context)
+        val apiService = provideAccountsApiService(tokenManager)
+
+        return viewModelFactory {
+            initializer {
+                AccountsViewModel(apiService)
             }
         }
     }
