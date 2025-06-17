@@ -31,7 +31,6 @@ fun AllTransactionsScreen(navController: NavController) {
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        modifier = Modifier.statusBarsPadding()
                     )
                 },
                 navigationIcon = {

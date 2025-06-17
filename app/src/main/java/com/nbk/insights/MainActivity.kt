@@ -3,9 +3,10 @@ package com.nbk.insights
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -17,9 +18,13 @@ import com.nbk.insights.viewmodels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        window.statusBarColor = Color(0xFF1E3A8A).toArgb()
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        WindowCompat.getInsetsController(window, window.decorView)?.apply {
+            isAppearanceLightStatusBars = false // false = white icons
+        }
 
         setContent {
             InsightsTheme {
@@ -32,9 +37,7 @@ class MainActivity : ComponentActivity() {
                 )
 
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(WindowInsets.safeDrawing.asPaddingValues())
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     AppNavigation(
                         navController = navController,
@@ -46,3 +49,5 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+

@@ -42,7 +42,7 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column(modifier = Modifier.statusBarsPadding()) {
+                    Column() {
                         Text(
                             text = "Hello, $firstName",
                             fontSize = 20.sp,

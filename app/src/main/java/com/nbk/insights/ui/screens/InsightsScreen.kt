@@ -79,7 +79,7 @@ fun InsightsScreen(navController: NavController) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF1E3A8A)
                 ),
-                modifier = Modifier.statusBarsPadding() // Extend under status bar
+                // Extend under status bar
             )
         },
         bottomBar = {
