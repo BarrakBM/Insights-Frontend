@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nbk.insights.ui.theme.InsightsTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 
 @Composable
 fun SpendingPieChart(categories: List<SpendingCategory>) {
@@ -35,10 +37,27 @@ fun SpendingPieChart(categories: List<SpendingCategory>) {
             startAngle += sweepAngle
         }
 
+        // Draw white center circle for donut effect
         drawCircle(
             color = Color.White,
             radius = radius * 0.4f,
             center = center
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SpendingPieChartPreview() {
+    InsightsTheme {
+        val sampleCategories = listOf(
+            SpendingCategory("Dining", 1140f, 30f, Color(0xFFEF4444), Icons.Default.Restaurant),
+            SpendingCategory("Shopping", 912f, 24f, Color(0xFF3B82F6), Icons.Default.ShoppingBag),
+            SpendingCategory("Transport", 608f, 16f, Color(0xFF10B981), Icons.Default.DirectionsCar),
+            SpendingCategory("Entertainment", 456f, 12f, Color(0xFF8B5CF6), Icons.Default.Movie),
+            SpendingCategory("Utilities", 380f, 10f, Color(0xFFF59E0B), Icons.Default.Bolt),
+            SpendingCategory("Healthcare", 304f, 8f, Color(0xFFEC4899), Icons.Default.LocalHospital)
+        )
+        SpendingPieChart(sampleCategories)
     }
 }

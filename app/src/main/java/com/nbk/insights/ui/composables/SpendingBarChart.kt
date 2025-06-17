@@ -53,3 +53,17 @@ fun SpendingBarChart(spendingData: List<Float>) {
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun SpendingBarChartPreview() {
+    InsightsTheme {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Spending Chart Preview")
+            Spacer(modifier = Modifier.height(16.dp))
+            SpendingBarChart(listOf(3500f, 3200f, 3800f))
+        }
+    }
+}

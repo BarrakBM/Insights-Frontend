@@ -104,7 +104,12 @@ class AuthViewModel(
     fun dummyLogin() {
         Log.i(TAG, "Performing dummy login for testing")
         val dummyToken = "dummy-jwt-token-123456"
-        val dummyUser = User(email = "test@nbk.com", password = "password123", id = 1L)
+        val dummyUser = UserDTO(
+            username = "test@nbk.com",
+            password = "password123",
+            id = 1L,
+            fullName = "Test User"
+        )
         tokenManager.saveToken(dummyToken)
         _token.value = TokenResponse(dummyToken)
         _user.value = dummyUser

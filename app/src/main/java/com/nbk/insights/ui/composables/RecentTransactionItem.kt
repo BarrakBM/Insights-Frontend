@@ -5,15 +5,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.InsightsTheme
@@ -65,5 +64,37 @@ fun RecentTransactionItem(transaction: RecentTransaction) {
             fontWeight = FontWeight.Bold,
             color = Color(0xFFEF4444)
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RecentTransactionItemPreview() {
+    InsightsTheme {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            RecentTransactionItem(
+                RecentTransaction(
+                    "Starbucks Coffee",
+                    "Dining",
+                    "-KD 4.50",
+                    "Today 2:30 PM",
+                    Icons.Default.Restaurant,
+                    Color(0xFFEF4444)
+                )
+            )
+            RecentTransactionItem(
+                RecentTransaction(
+                    "Amazon Purchase",
+                    "Shopping",
+                    "-KD 67.20",
+                    "Yesterday 4:15 PM",
+                    Icons.Default.ShoppingBag,
+                    Color(0xFF3B82F6)
+                )
+            )
+        }
     }
 }

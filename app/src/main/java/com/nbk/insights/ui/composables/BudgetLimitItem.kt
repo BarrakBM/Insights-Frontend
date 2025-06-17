@@ -5,11 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.InsightsTheme
@@ -114,5 +111,46 @@ fun BudgetLimitItem(budget: BudgetLimit) {
             },
             trackColor = Color(0xFFF3F4F6)
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BudgetLimitItemPreview() {
+    InsightsTheme {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            BudgetLimitItem(
+                BudgetLimit(
+                    "Dining",
+                    450f,
+                    400f,
+                    Color(0xFFEF4444),
+                    Icons.Default.Restaurant,
+                    isOverBudget = true
+                )
+            )
+            BudgetLimitItem(
+                BudgetLimit(
+                    "Shopping",
+                    680f,
+                    800f,
+                    Color(0xFF3B82F6),
+                    Icons.Default.ShoppingBag
+                )
+            )
+            BudgetLimitItem(
+                BudgetLimit(
+                    "Entertainment",
+                    180f,
+                    200f,
+                    Color(0xFFF59E0B),
+                    Icons.Default.Movie,
+                    isNearLimit = true
+                )
+            )
+        }
     }
 }

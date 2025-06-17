@@ -3,11 +3,10 @@ package com.nbk.insights
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.nbk.insights.navigation.AppNavigation
@@ -18,12 +17,13 @@ import com.nbk.insights.viewmodels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             InsightsTheme {
                 val navController = rememberNavController()
-
                 val authViewModel: AuthViewModel = viewModel(
                     factory = AppInitializer.provideAuthViewModelFactory(applicationContext)
                 )
@@ -31,14 +31,16 @@ class MainActivity : ComponentActivity() {
                     factory = AppInitializer.provideAccountsViewModelFactory(applicationContext)
                 )
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        AppNavigation(
-                            navController = navController,
-                            authViewModel = authViewModel,
-                            accountsViewModel = accountsViewModel
-                        )
-                    }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(WindowInsets.safeDrawing.asPaddingValues())
+                ) {
+                    AppNavigation(
+                        navController = navController,
+                        authViewModel = authViewModel,
+                        accountsViewModel = accountsViewModel
+                    )
                 }
             }
         }

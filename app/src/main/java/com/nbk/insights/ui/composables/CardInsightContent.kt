@@ -9,14 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.LocalHospital
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
@@ -63,7 +57,9 @@ data class BudgetLimit(
 @Composable
 fun CardInsightContent(
     card: BankCardDTO,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+
 ) {
     var selectedPeriod by remember { mutableStateOf("Monthly") }
     var selectedMonth by remember { mutableStateOf("Dec\n2024") }
@@ -71,7 +67,14 @@ fun CardInsightContent(
     val periods = listOf("Daily", "Weekly", "Monthly", "Yearly")
     val months = listOf("Oct\n2024", "Nov\n2024", "Dec\n2024", "Jan\n2025")
 
-    val spendingData = listOf(3500f, 3200f, 3800f)
+    // Sample data for spending chart (last 3 months)
+    val spendingData = listOf(
+        3500f, // Oct
+        3200f, // Nov
+        3800f  // Dec
+    )
+
+    // Sample spending categories
     val spendingCategories = listOf(
         SpendingCategory("Dining", 1140f, 30f, Color(0xFFEF4444), Icons.Default.Restaurant),
         SpendingCategory("Shopping", 912f, 24f, Color(0xFF3B82F6), Icons.Default.ShoppingBag),
@@ -80,11 +83,15 @@ fun CardInsightContent(
         SpendingCategory("Utilities", 380f, 10f, Color(0xFFF59E0B), Icons.Default.Bolt),
         SpendingCategory("Healthcare", 304f, 8f, Color(0xFFEC4899), Icons.Default.LocalHospital)
     )
+
+    // Sample recent transactions
     val recentTransactions = listOf(
         RecentTransaction("Starbucks Coffee", "Dining", "-KD 4.50", "Today 2:30 PM", Icons.Default.Restaurant, Color(0xFFEF4444)),
         RecentTransaction("Amazon Purchase", "Shopping", "-KD 67.20", "Yesterday 4:15 PM", Icons.Default.ShoppingBag, Color(0xFF3B82F6)),
         RecentTransaction("Uber Ride", "Transport", "-KD 12.30", "Dec 20, 8:45 PM", Icons.Default.DirectionsCar, Color(0xFF10B981))
     )
+
+    // Sample budget limits
     val budgetLimits = listOf(
         BudgetLimit("Dining", 450f, 400f, Color(0xFFEF4444), Icons.Default.Restaurant, isOverBudget = true),
         BudgetLimit("Shopping", 680f, 800f, Color(0xFF3B82F6), Icons.Default.ShoppingBag),
@@ -99,6 +106,7 @@ fun CardInsightContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
+        // Header
         item {
             Card(
                 modifier = Modifier
@@ -139,6 +147,7 @@ fun CardInsightContent(
             }
         }
 
+        // Period Selector
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -165,6 +174,7 @@ fun CardInsightContent(
             }
         }
 
+        // Month Navigation
         item {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -191,6 +201,7 @@ fun CardInsightContent(
             }
         }
 
+        // Spending Chart
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -212,6 +223,7 @@ fun CardInsightContent(
             }
         }
 
+        // Spending Breakdown Pie Chart
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -228,6 +240,7 @@ fun CardInsightContent(
                         color = Color.Black
                     )
                     Spacer(modifier = Modifier.height(16.dp))
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -236,7 +249,10 @@ fun CardInsightContent(
                     ) {
                         SpendingPieChart(spendingCategories)
                     }
+
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // Legend
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -268,6 +284,7 @@ fun CardInsightContent(
             }
         }
 
+        // Recent Transactions
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -292,12 +309,16 @@ fun CardInsightContent(
                             Text("All Categories", color = Color(0xFF1E3A8A))
                         }
                     }
+
                     Spacer(modifier = Modifier.height(12.dp))
+
                     recentTransactions.forEach { transaction ->
                         RecentTransactionItem(transaction)
                         Spacer(modifier = Modifier.height(8.dp))
                     }
+
                     Spacer(modifier = Modifier.height(8.dp))
+
                     OutlinedButton(
                         onClick = { /* Show more transactions */ },
                         modifier = Modifier.fillMaxWidth()
@@ -308,6 +329,7 @@ fun CardInsightContent(
             }
         }
 
+        // Budget Limits
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -324,6 +346,7 @@ fun CardInsightContent(
                         color = Color.Black
                     )
                     Spacer(modifier = Modifier.height(16.dp))
+
                     budgetLimits.forEach { budget ->
                         BudgetLimitItem(budget)
                         Spacer(modifier = Modifier.height(12.dp))
@@ -331,5 +354,22 @@ fun CardInsightContent(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CardInsightContentPreview() {
+    InsightsTheme {
+        CardInsightContent(
+            card = BankCardDTO(
+                type = "Debit Card",
+                name = "NBK Titanium",
+                lastFourDigits = "5678",
+                balance = "KD 3,456.78",
+                expiryDate = "05/26"
+            ),
+            onDismiss = { }
+        )
     }
 }
