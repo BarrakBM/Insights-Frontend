@@ -6,6 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.nbk.insights.ui.screens.HomeScreen
 import com.nbk.insights.ui.screens.LoginScreen
+import com.nbk.insights.ui.screens.InsightsScreen
+import com.nbk.insights.ui.screens.AllTransactionsScreen
 import com.nbk.insights.viewmodels.AuthViewModel
 
 @Composable
@@ -15,10 +17,20 @@ fun AppNavigation(navController: NavHostController, authViewModel: AuthViewModel
             LoginScreen(viewModel = authViewModel, navController = navController)
         }
         composable(Screen.Home.route) {
-            HomeScreen(viewModel = authViewModel, navController = navController)
+            HomeScreen(
+                navController = navController,
+                onViewAllCards = { /* TODO: Implement navigation to View All Cards Screen */ },
+                onViewAllTransactions = {
+                    navController.navigate(Screen.AllTransactions.route)
+                }
+            )
         }
-//        composable(Screen.Register.route) {
-//            RegisterScreen(viewModel = viewModel, navController = navController)
-//        }
+
+        composable(Screen.Insights.route) {
+            InsightsScreen(navController = navController)
+        }
+        composable(Screen.AllTransactions.route) {
+            AllTransactionsScreen(navController = navController)
+        }
     }
 }
