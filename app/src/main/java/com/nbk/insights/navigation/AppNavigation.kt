@@ -8,10 +8,15 @@ import com.nbk.insights.ui.screens.HomeScreen
 import com.nbk.insights.ui.screens.LoginScreen
 import com.nbk.insights.ui.screens.InsightsScreen
 import com.nbk.insights.ui.screens.AllTransactionsScreen
+import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.AuthViewModel
 
 @Composable
-fun AppNavigation(navController: NavHostController, authViewModel: AuthViewModel) {
+fun AppNavigation(
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    accountsViewModel: AccountsViewModel
+) {
     NavHost(navController = navController, startDestination = Screen.Login.route) {
         composable(Screen.Login.route) {
             LoginScreen(viewModel = authViewModel, navController = navController)
@@ -22,7 +27,9 @@ fun AppNavigation(navController: NavHostController, authViewModel: AuthViewModel
                 onViewAllCards = { /* TODO: Implement navigation to View All Cards Screen */ },
                 onViewAllTransactions = {
                     navController.navigate(Screen.AllTransactions.route)
-                }
+                },
+                authViewModel = authViewModel,
+                accountsViewModel = accountsViewModel
             )
         }
 
