@@ -77,6 +77,7 @@ fun HomeScreen(
                 .background(Color(0xFFF5F5F5))
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
