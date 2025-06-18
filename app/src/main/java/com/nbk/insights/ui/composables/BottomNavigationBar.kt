@@ -1,15 +1,17 @@
 package com.nbk.insights.ui.composables
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -31,24 +33,18 @@ fun BottomNavigationBar(
     NavigationBar(
         modifier = Modifier
             .height(80.dp)
-            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .windowInsetsPadding(WindowInsets.navigationBars), // Proper padding
         containerColor = Color.White,
         tonalElevation = 8.dp
     ) {
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    Icon(
-                        item.icon,
-                        contentDescription = item.title,
-                        tint = if (selectedTab == item.title) Color(0xFF1E3A8A) else Color.Gray
-                    )
+                    Icon(item.icon, contentDescription = item.title)
                 },
                 label = {
-                    Text(
-                        text = item.title,
-                        color = if (selectedTab == item.title) Color(0xFF1E3A8A) else Color.Gray
-                    )
+                    Text(text = item.title)
                 },
                 selected = selectedTab == item.title,
                 onClick = {
@@ -69,16 +65,5 @@ fun BottomNavigationBar(
                 )
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun BottomNavigationBarPreview() {
-    InsightsTheme {
-        BottomNavigationBar(
-            selectedTab = "Home",
-            navController = rememberNavController()
-        )
     }
 }

@@ -102,9 +102,10 @@ fun CardInsightContent(
     )
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFF5F5F5)),
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+            .padding(WindowInsets.safeDrawing.asPaddingValues()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
