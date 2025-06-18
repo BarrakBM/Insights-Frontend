@@ -60,9 +60,6 @@ fun HomeScreen(
                     IconButton(onClick = {}) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                     }
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
             )

@@ -1,10 +1,12 @@
 package com.nbk.insights.ui.composables
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +24,8 @@ fun TotalBalanceCard(
     balance: String,
     lastUpdated: String
 ) {
+    var isBalanceVisible by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -46,7 +50,7 @@ fun TotalBalanceCard(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = balance,
+                    text = if (isBalanceVisible) balance else "**************",
                     color = Color.White,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
@@ -61,7 +65,9 @@ fun TotalBalanceCard(
 
             Column(horizontalAlignment = Alignment.End) {
                 Surface(
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable { isBalanceVisible = !isBalanceVisible },
                     shape = RoundedCornerShape(20.dp),
                     color = Color.White.copy(alpha = 0.2f)
                 ) {
@@ -69,7 +75,7 @@ fun TotalBalanceCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Default.Visibility,
+                            imageVector = if (isBalanceVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = "Toggle visibility",
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
