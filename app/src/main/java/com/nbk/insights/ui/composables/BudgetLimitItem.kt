@@ -1,6 +1,7 @@
 package com.nbk.insights.ui.composables
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,11 +20,19 @@ import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.InsightsTheme
 
 @Composable
-fun BudgetLimitItem(budget: BudgetLimit) {
+fun BudgetLimitItem(
+    budget: BudgetLimit,
+    onClick: () -> Unit = {} // Added click callback
+) {
     val progress = budget.spent / budget.limit
     val remaining = budget.limit - budget.spent
 
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() } // Make the whole item clickable
+            .padding(vertical = 4.dp) // Add some padding for better touch target
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -130,7 +139,8 @@ fun BudgetLimitItemPreview() {
                     Color(0xFFEF4444),
                     Icons.Default.Restaurant,
                     isOverBudget = true
-                )
+                ),
+                onClick = { }
             )
             BudgetLimitItem(
                 BudgetLimit(
@@ -139,17 +149,8 @@ fun BudgetLimitItemPreview() {
                     800f,
                     Color(0xFF3B82F6),
                     Icons.Default.ShoppingBag
-                )
-            )
-            BudgetLimitItem(
-                BudgetLimit(
-                    "Entertainment",
-                    180f,
-                    200f,
-                    Color(0xFFF59E0B),
-                    Icons.Default.Movie,
-                    isNearLimit = true
-                )
+                ),
+                onClick = { }
             )
         }
     }

@@ -27,6 +27,8 @@ fun CardBarItemWithActions(
     onViewTransactions: () -> Unit,
     onStartBudgeting: () -> Unit
 ) {
+    var showBudgetDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -121,7 +123,7 @@ fun CardBarItemWithActions(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Start Budget Planning",
+                        text = "View Insights",
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
@@ -160,14 +162,14 @@ fun CardBarItemWithActions(
                 }
             }
 
-            // Start Budgeting Button (hidden - will be shown when View Insights is clicked)
+            // Start Budgeting Button
             OutlinedButton(
-                onClick = onStartBudgeting,
+                onClick = { showBudgetDialog = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = Color(0xFF1E3A8A)
                 ),
-                border = BorderStroke(1.dp, Color(0xFF1E3A8A)), // ✅ Fixed here
+                border = BorderStroke(1.dp, Color(0xFF1E3A8A)),
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(16.dp)
             ) {
@@ -184,7 +186,7 @@ fun CardBarItemWithActions(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "View Insights",
+                        text = "Start Budgeting",
                         color = Color(0xFF1E3A8A),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
@@ -192,6 +194,19 @@ fun CardBarItemWithActions(
                 }
             }
         }
+    }
+
+    // Show Budget Dialog
+    if (showBudgetDialog) {
+        BudgetLimitDialog(
+            onDismiss = { showBudgetDialog = false },
+            onConfirm = { category, limit ->
+                showBudgetDialog = false
+                // Handle the budget limit setting here
+                // You can pass this data to your ViewModel or handle it as needed
+                onStartBudgeting()
+            }
+        )
     }
 }
 
