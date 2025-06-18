@@ -68,13 +68,6 @@ fun InsightsScreen(navController: NavController) {
                             tint = Color.White
                         )
                     }
-                    IconButton(onClick = { /* Profile */ }) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = Color.White
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF1E3A8A)

@@ -23,7 +23,6 @@ fun BottomNavigationBar(
 ) {
     val items = listOf(
         BottomNavBarDTO("Home", Icons.Default.Home, "home"),
-        BottomNavBarDTO("Cards", Icons.Default.CreditCard, "cards"),
         BottomNavBarDTO("Insights", Icons.Default.PieChart, "insights"),
         BottomNavBarDTO("Settings", Icons.Default.Settings, "settings")
     )
