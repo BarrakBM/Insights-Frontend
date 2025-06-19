@@ -46,8 +46,8 @@ fun AllTransactionsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
+                .padding(paddingValues), // Respect top bar space
+            contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp), // Additional padding
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(allTransactions) { transaction ->

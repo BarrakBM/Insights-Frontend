@@ -59,20 +59,30 @@ fun CardInsightContent(
     card: BankCardDTO,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
-
 ) {
     var selectedPeriod by remember { mutableStateOf("Monthly") }
     var selectedMonth by remember { mutableStateOf("Dec\n2024") }
+
+    // Dialog states
+    var showAddBudgetDialog by remember { mutableStateOf(false) }
+    var showEditBudgetDialog by remember { mutableStateOf(false) }
+    var selectedBudgetForEdit by remember { mutableStateOf<BudgetLimit?>(null) }
+
+    // Budget limits state - you can make this a mutable list to handle add/edit/delete
+    var budgetLimits by remember {
+        mutableStateOf(listOf(
+            BudgetLimit("Dining", 450f, 400f, Color(0xFFEF4444), Icons.Default.Restaurant, isOverBudget = true),
+            BudgetLimit("Shopping", 680f, 800f, Color(0xFF3B82F6), Icons.Default.ShoppingBag),
+            BudgetLimit("Transport", 230f, 300f, Color(0xFF10B981), Icons.Default.DirectionsCar),
+            BudgetLimit("Entertainment", 180f, 200f, Color(0xFFF59E0B), Icons.Default.Movie, isNearLimit = true)
+        ))
+    }
 
     val periods = listOf("Daily", "Weekly", "Monthly", "Yearly")
     val months = listOf("Oct\n2024", "Nov\n2024", "Dec\n2024", "Jan\n2025")
 
     // Sample data for spending chart (last 3 months)
-    val spendingData = listOf(
-        3500f, // Oct
-        3200f, // Nov
-        3800f  // Dec
-    )
+    val spendingData = listOf(3500f, 3200f, 3800f)
 
     // Sample spending categories
     val spendingCategories = listOf(
@@ -91,18 +101,11 @@ fun CardInsightContent(
         RecentTransaction("Uber Ride", "Transport", "-KD 12.30", "Dec 20, 8:45 PM", Icons.Default.DirectionsCar, Color(0xFF10B981))
     )
 
-    // Sample budget limits
-    val budgetLimits = listOf(
-        BudgetLimit("Dining", 450f, 400f, Color(0xFFEF4444), Icons.Default.Restaurant, isOverBudget = true),
-        BudgetLimit("Shopping", 680f, 800f, Color(0xFF3B82F6), Icons.Default.ShoppingBag),
-        BudgetLimit("Transport", 230f, 300f, Color(0xFF10B981), Icons.Default.DirectionsCar),
-        BudgetLimit("Entertainment", 180f, 200f, Color(0xFFF59E0B), Icons.Default.Movie, isNearLimit = true)
-    )
-
     LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFF5F5F5)),
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+            .padding(WindowInsets.safeDrawing.asPaddingValues()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
@@ -329,7 +332,7 @@ fun CardInsightContent(
             }
         }
 
-        // Budget Limits
+        // Budget Limits with Plus Icon and Clickable Items
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -339,21 +342,155 @@ fun CardInsightContent(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = "Budget Limits",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                    // Header with Plus Icon
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Budget Limits",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+
+                        // Plus Icon Button
+                        IconButton(
+                            onClick = { showAddBudgetDialog = true },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    Color(0xFF1E3A8A).copy(alpha = 0.1f),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add Budget Limit",
+                                tint = Color(0xFF1E3A8A),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    budgetLimits.forEach { budget ->
-                        BudgetLimitItem(budget)
-                        Spacer(modifier = Modifier.height(12.dp))
+                    // Budget Items - Now clickable
+                    if (budgetLimits.isNotEmpty()) {
+                        budgetLimits.forEachIndexed { index, budget ->
+                            BudgetLimitItem(
+                                budget = budget,
+                                onClick = {
+                                    selectedBudgetForEdit = budget
+                                    showEditBudgetDialog = true
+                                }
+                            )
+                            if (index < budgetLimits.size - 1) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+                    } else {
+                        // Empty state
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                Icons.Default.TrendingUp,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No Budget Limits Set",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "Tap the + button to add your first budget limit",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+
+    // Add Budget Dialog
+    if (showAddBudgetDialog) {
+        BudgetLimitDialog(
+            onDismiss = { showAddBudgetDialog = false },
+            onConfirm = { category, limit ->
+                // Add new budget to the list
+                val newBudget = BudgetLimit(
+                    category = category,
+                    spent = 0f, // Starting with 0 spent
+                    limit = limit,
+                    color = when (category) {
+                        "Dining" -> Color(0xFFEF4444)
+                        "Shopping" -> Color(0xFF3B82F6)
+                        "Transport" -> Color(0xFF10B981)
+                        "Entertainment" -> Color(0xFF8B5CF6)
+                        "Utilities" -> Color(0xFFF59E0B)
+                        "Healthcare" -> Color(0xFFEC4899)
+                        else -> Color(0xFF6B7280)
+                    },
+                    icon = when (category) {
+                        "Dining" -> Icons.Default.Restaurant
+                        "Shopping" -> Icons.Default.ShoppingBag
+                        "Transport" -> Icons.Default.DirectionsCar
+                        "Entertainment" -> Icons.Default.Movie
+                        "Utilities" -> Icons.Default.Bolt
+                        "Healthcare" -> Icons.Default.LocalHospital
+                        else -> Icons.Default.MoreHoriz
+                    }
+                )
+                budgetLimits = budgetLimits + newBudget
+                showAddBudgetDialog = false
+            }
+        )
+    }
+
+    // Edit Budget Dialog
+    if (showEditBudgetDialog && selectedBudgetForEdit != null) {
+        EditBudgetDialog(
+            budget = selectedBudgetForEdit!!,
+            onDismiss = {
+                showEditBudgetDialog = false
+                selectedBudgetForEdit = null
+            },
+            onUpdate = { newLimit ->
+                // Update the budget limit
+                budgetLimits = budgetLimits.map { budget ->
+                    if (budget.category == selectedBudgetForEdit!!.category) {
+                        budget.copy(
+                            limit = newLimit,
+                            isOverBudget = budget.spent > newLimit,
+                            isNearLimit = !budget.isOverBudget && (budget.spent / newLimit) >= 0.8f
+                        )
+                    } else {
+                        budget
+                    }
+                }
+                showEditBudgetDialog = false
+                selectedBudgetForEdit = null
+            },
+            onDelete = {
+                // Remove the budget from the list
+                budgetLimits = budgetLimits.filter { it.category != selectedBudgetForEdit!!.category }
+                showEditBudgetDialog = false
+                selectedBudgetForEdit = null
+            }
+        )
     }
 }
 

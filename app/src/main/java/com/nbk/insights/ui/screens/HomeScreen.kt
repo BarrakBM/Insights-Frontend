@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,9 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
+import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
+import com.nbk.insights.data.tempfunctions.getRecentTransactions
+import com.nbk.insights.data.tempfunctions.getBankCards
 import com.nbk.insights.ui.composables.*
-import com.nbk.insights.data.tempfunctions.*
 import com.nbk.insights.viewmodels.*
 import java.math.BigDecimal
 
@@ -42,18 +46,9 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column() {
-                        Text(
-                            text = "Hello, $firstName",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "Welcome back!",
-                            fontSize = 14.sp,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
+                    Column {
+                        Text("Hello, $firstName", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Welcome back!", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
                     }
                 },
                 actions = {
@@ -73,15 +68,13 @@ fun HomeScreen(
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
                 .padding(paddingValues)
+                .padding(WindowInsets.safeDrawing.asPaddingValues()) // 🔥 Key line for edge-to-edge
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                TotalBalanceCard(
-                    balance = "KD ${totalBalance}",
-                    lastUpdated = "Today, 10:45 AM"
-                )
+                TotalBalanceCard(balance = "KD ${totalBalance}", lastUpdated = "Today, 10:45 AM")
             }
             item {
                 Row(
@@ -96,7 +89,6 @@ fun HomeScreen(
                 }
             }
             items(bankCards) { CardItem(card = it) }
-
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
