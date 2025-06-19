@@ -12,27 +12,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.nbk.insights.data.tempfunctions.getRecentTransactions
 import com.nbk.insights.data.tempfunctions.getBankCards
+import com.nbk.insights.navigation.Screen
 import com.nbk.insights.ui.composables.*
+import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.*
 import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onViewAllCards: () -> Unit,
-    onViewAllTransactions: () -> Unit,
     navController: NavController,
-    authViewModel: AuthViewModel,
-    accountsViewModel: AccountsViewModel
 ) {
+    val context = LocalContext.current
+    val authViewModel: AuthViewModel = viewModel(
+        factory = remember { AppInitializer.provideAuthViewModelFactory(context) }
+    )
+    val accountsViewModel: AccountsViewModel = viewModel(
+        factory = remember { AppInitializer.provideAccountsViewModelFactory(context) }
+    )
     val recentTransactions = remember { getRecentTransactions() }
     val bankCards = remember { getBankCards() }
     val firstName = authViewModel.user.value?.fullName?.split(" ")?.firstOrNull() ?: "Guest"
@@ -83,7 +90,9 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("My Cards", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    TextButton(onClick = onViewAllCards) {
+                    TextButton(onClick = {
+                        /* TODO: Implement navigation to View All Cards Screen */
+                    }) {
                         Text("View All Cards", color = Color(0xFF1E3A8A))
                     }
                 }
@@ -96,7 +105,9 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Recent Transactions", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    TextButton(onClick = onViewAllTransactions) {
+                    TextButton(onClick = {
+                        navController.navigate(Screen.AllTransactions.route)
+                    }) {
                         Text("View All", color = Color(0xFF1E3A8A))
                     }
                 }

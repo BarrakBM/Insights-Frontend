@@ -1,6 +1,7 @@
 package com.nbk.insights.utils
 
 import android.content.Context
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -9,6 +10,7 @@ import com.nbk.insights.network.AuthApiService
 import com.nbk.insights.network.RetrofitHelper
 import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.AuthViewModel
+import retrofit2.Retrofit
 
 object AppInitializer {
 
@@ -16,35 +18,49 @@ object AppInitializer {
         return TokenManager.create(context)
     }
 
-    fun provideAuthApiService(tokenManager: TokenManager): AuthApiService {
+    private inline fun <reified Api : Any, reified VM : ViewModel> provideViewModelFactory(
+        context: Context,
+        crossinline apiProvider: (retrofit: Retrofit) -> Api,
+        crossinline viewModelProvider: (api: Api, tokenManager: TokenManager) -> VM
+    ): ViewModelProvider.Factory {
+        val tokenManager = provideTokenManager(context)
         val retrofit = RetrofitHelper.getInstance(tokenManager)
-        return retrofit.create(AuthApiService::class.java)
+        val api = apiProvider(retrofit)
+        return viewModelFactory {
+            initializer {
+                viewModelProvider(api, tokenManager)
+            }
+        }
+    }
+
+    private inline fun <reified Api : Any, reified VM : ViewModel> provideViewModelFactoryWithoutToken(
+        context: Context,
+        crossinline apiProvider: (retrofit: Retrofit) -> Api,
+        crossinline viewModelProvider: (api: Api) -> VM
+    ): ViewModelProvider.Factory {
+        val tokenManager = provideTokenManager(context)
+        val retrofit = RetrofitHelper.getInstance(tokenManager)
+        val api = apiProvider(retrofit)
+        return viewModelFactory {
+            initializer {
+                viewModelProvider(api)
+            }
+        }
     }
 
     fun provideAuthViewModelFactory(context: Context): ViewModelProvider.Factory {
-        val tokenManager = provideTokenManager(context)
-        val apiService = provideAuthApiService(tokenManager)
-
-        return viewModelFactory {
-            initializer {
-                AuthViewModel(apiService, tokenManager)
-            }
-        }
-    }
-
-    fun provideAccountsApiService(tokenManager: TokenManager): AccountsApiService {
-        val retrofit = RetrofitHelper.getInstance(tokenManager)
-        return retrofit.create(AccountsApiService::class.java)
+        return provideViewModelFactory(
+            context,
+            { retrofit -> retrofit.create(AuthApiService::class.java) },
+            { api, tokenManager -> AuthViewModel(api, tokenManager) }
+        )
     }
 
     fun provideAccountsViewModelFactory(context: Context): ViewModelProvider.Factory {
-        val tokenManager = provideTokenManager(context)
-        val apiService = provideAccountsApiService(tokenManager)
-
-        return viewModelFactory {
-            initializer {
-                AccountsViewModel(apiService)
-            }
-        }
+        return provideViewModelFactoryWithoutToken(
+            context,
+            { retrofit -> retrofit.create(AccountsApiService::class.java) },
+            { api -> AccountsViewModel(api) }
+        )
     }
 }
