@@ -22,6 +22,7 @@ import com.nbk.insights.data.tempfunctions.getBankCards
 import com.nbk.insights.ui.composables.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.asPaddingValues
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,10 +32,10 @@ fun InsightsScreen(navController: NavController) {
     var selectedCardId by remember { mutableStateOf<String?>(null) }
     var showInsights by remember { mutableStateOf(false) }
 
-    val edgeToEdgePadding = WindowInsets.safeDrawing.asPaddingValues()
     Scaffold(
         topBar = {
             TopAppBar(
+                modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
                 title = {
                     Column {
                         Text(
@@ -52,35 +53,23 @@ fun InsightsScreen(navController: NavController) {
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* Notifications */ }) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1E3A8A)
-                ),
-                // Extend under status bar
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
             )
         },
         bottomBar = {
-            BottomNavigationBar(
-                selectedTab = "Insights",
-                navController = navController
-            )
+            BottomNavigationBar(selectedTab = "Insights", navController = navController)
         }
-    ) { paddingValues ->
+    ) { innerPadding ->
+        val safePadding = WindowInsets.safeDrawing.asPaddingValues()
+
         if (showInsights && selectedCardId != null) {
             val selectedCard = bankCards.find { it.lastFourDigits == selectedCardId }
             selectedCard?.let { card ->
@@ -90,79 +79,64 @@ fun InsightsScreen(navController: NavController) {
                         showInsights = false
                         selectedCardId = null
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(selectedTab = "Insights", navController = navController)
-            }
-        ) { innerPadding ->
-            if (showInsights && selectedCardId != null) {
-                val selectedCard = bankCards.find { it.lastFourDigits == selectedCardId }
-                selectedCard?.let { card ->
-                    CardInsightContent(
-                        card = card,
-                        onDismiss = {
-                            showInsights = false
-                            selectedCardId = null
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    )
-                }
-            } else {
-                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFF5F5F5))
-                        .padding(innerPadding),
-                    contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item {
-                        Card(
+                        .padding(innerPadding)
+                        .padding(safePadding)
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF5F5F5))
+                    .padding(innerPadding)
+                    .padding(safePadding),
+                contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp)),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp)),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Total Balance", fontSize = 12.sp, color = Color.Gray, textAlign = TextAlign.Center)
-                                    Text("KD", fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Medium)
-                                    Text("12,222.21", fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.Bold)
-                                }
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Active Cards", fontSize = 12.sp, color = Color.Gray)
-                                    Text("4", fontSize = 20.sp, color = Color.Black, fontWeight = FontWeight.Bold)
-                                }
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("This Month", fontSize = 12.sp, color = Color.Gray)
-                                    Text("-KD 1,230", fontSize = 16.sp, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
-                                }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Total Balance", fontSize = 12.sp, color = Color.Gray, textAlign = TextAlign.Center)
+                                Text("KD", fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Medium)
+                                Text("12,222.21", fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Active Cards", fontSize = 12.sp, color = Color.Gray)
+                                Text("4", fontSize = 20.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("This Month", fontSize = 12.sp, color = Color.Gray)
+                                Text("-KD 1,230", fontSize = 16.sp, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
                             }
                         }
                     }
-                    items(bankCards) { card ->
-                        CardBarItemWithActions(
-                            card = card,
-                            onViewInsights = {
-                                selectedCardId = card.lastFourDigits
-                                showInsights = true
-                            },
-                            onViewTransactions = {
-                                navController.navigate("all_transactions")
-                            },
-                            onStartBudgeting = { }
-                        )
-                    }
+                }
+                items(bankCards) { card ->
+                    CardBarItemWithActions(
+                        card = card,
+                        onViewInsights = {
+                            selectedCardId = card.lastFourDigits
+                            showInsights = true
+                        },
+                        onViewTransactions = {
+                            navController.navigate("all_transactions")
+                        },
+                        onStartBudgeting = { }
+                    )
                 }
             }
         }
