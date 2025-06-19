@@ -55,9 +55,6 @@ fun HomeScreen(
                     IconButton(onClick = {}) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                     }
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
             )
@@ -73,6 +70,7 @@ fun HomeScreen(
                 .padding(paddingValues)
                 .padding(WindowInsets.safeDrawing.asPaddingValues()) // 🔥 Key line for edge-to-edge
                 .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {

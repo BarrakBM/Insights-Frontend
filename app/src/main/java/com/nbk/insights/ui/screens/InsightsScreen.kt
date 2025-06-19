@@ -32,30 +32,63 @@ fun InsightsScreen(navController: NavController) {
     var showInsights by remember { mutableStateOf(false) }
 
     val edgeToEdgePadding = WindowInsets.safeDrawing.asPaddingValues()
-
-    Box(modifier = Modifier.fillMaxSize().padding(edgeToEdgePadding)) {
-        Scaffold(
-            containerColor = Color.Transparent, // important for full background under bars
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text("My Cards", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("Manage your cards", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {}) {
-                            Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
-                        }
-                        IconButton(onClick = {}) {
-                            Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "My Cards",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Manage your cards",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* Notifications */ }) {
+                        Icon(
+                            Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF1E3A8A)
+                ),
+                // Extend under status bar
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                selectedTab = "Insights",
+                navController = navController
+            )
+        }
+    ) { paddingValues ->
+        if (showInsights && selectedCardId != null) {
+            val selectedCard = bankCards.find { it.lastFourDigits == selectedCardId }
+            selectedCard?.let { card ->
+                CardInsightContent(
+                    card = card,
+                    onDismiss = {
+                        showInsights = false
+                        selectedCardId = null
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
                 )
