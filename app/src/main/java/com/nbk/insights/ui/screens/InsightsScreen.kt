@@ -33,9 +33,9 @@ fun InsightsScreen(navController: NavController) {
     var showInsights by remember { mutableStateOf(false) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
                 title = {
                     Column {
                         Text(
@@ -70,6 +70,7 @@ fun InsightsScreen(navController: NavController) {
             BottomNavigationBar(selectedTab = "Insights", navController = navController)
         }
     ) { innerPadding ->
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -98,6 +99,7 @@ fun InsightsScreen(navController: NavController) {
                         imageVector = Icons.Default.PieChart,
                         contentDescription = "Insights",
                         tint = Color.White
+
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("View All Insights", color = Color.White)

@@ -77,7 +77,6 @@ fun HomeScreen(
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
                 .padding(paddingValues)
-                .padding(WindowInsets.safeDrawing.asPaddingValues()) // 🔥 Key line for edge-to-edge
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
