@@ -32,10 +32,10 @@ fun BottomNavigationBar(
     NavigationBar(
         modifier = Modifier
             .height(80.dp)
-            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            .windowInsetsPadding(WindowInsets.navigationBars), // Proper padding
+            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
         containerColor = Color.White,
-        tonalElevation = 8.dp
+        tonalElevation = 8.dp,
+        windowInsets = WindowInsets(0, 0, 0, 0) // Remove default window insets
     ) {
         items.forEach { item ->
             NavigationBarItem(

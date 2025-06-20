@@ -34,9 +34,9 @@ fun InsightsScreen(navController: NavController) {
     var showInsights by remember { mutableStateOf(false) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
                 title = {
                     Column {
                         Text(
@@ -71,8 +71,6 @@ fun InsightsScreen(navController: NavController) {
             BottomNavigationBar(selectedTab = "Insights", navController = navController)
         }
     ) { innerPadding ->
-        val safePadding = WindowInsets.safeDrawing.asPaddingValues()
-
         if (showInsights && selectedCardId != null) {
             val selectedCard = bankCards.find { it.lastFourDigits == selectedCardId }
             selectedCard?.let { card ->
@@ -85,7 +83,6 @@ fun InsightsScreen(navController: NavController) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
-                        .padding(safePadding)
                 )
             }
         } else {
@@ -93,10 +90,9 @@ fun InsightsScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0xFFF5F5F5))
-                    .padding(innerPadding)
-                    .padding(safePadding),
-                contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
                     Card(

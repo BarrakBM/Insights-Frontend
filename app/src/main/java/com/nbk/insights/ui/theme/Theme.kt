@@ -16,52 +16,44 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF1E3A8A),
-    secondary = Color(0xFF3B82F6),
-    tertiary = Color(0xFF60A5FA)
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF1E3A8A),
-    secondary = Color(0xFF3B82F6),
-    tertiary = Color(0xFF60A5FA)
-)
+//private val DarkColorScheme = darkColorScheme(
+//    primary = Color(0xFF1E3A8A),
+//    secondary = Color(0xFF3B82F6),
+//    tertiary = Color(0xFF60A5FA)
+//)
+//
+//private val LightColorScheme = lightColorScheme(
+//    primary = Color(0xFF1E3A8A),
+//    secondary = Color(0xFF3B82F6),
+//    tertiary = Color(0xFF60A5FA)
+//)
 
 @Composable
 fun InsightsTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val context = LocalContext.current
-
     val colorScheme = when {
         dynamicColor -> {
+            val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
-    // Handle status bar color in theme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-
-            // Set status bar color
-            @Suppress("DEPRECATION")
-            window.statusBarColor = colorScheme.primary.toArgb() // Uses your primary color
-
-            // Set status bar icon color (light icons for dark backgrounds)
+            window.statusBarColor = colorScheme.primary.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
         content = content
     )
 }

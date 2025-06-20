@@ -104,8 +104,7 @@ fun CardInsightContent(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .padding(WindowInsets.safeDrawing.asPaddingValues()),
+            .background(Color(0xFFF5F5F5)),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
@@ -158,7 +157,9 @@ fun CardInsightContent(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 LazyRow(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(periods) { period ->
@@ -177,15 +178,17 @@ fun CardInsightContent(
             }
         }
 
-        // Month Navigation
+        // Month Navigation - FIXED VERSION
         item {
             LazyRow(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
                 items(months) { month ->
                     Card(
                         onClick = { selectedMonth = month },
+                        modifier = Modifier.width(80.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = if (selectedMonth == month) Color(0xFF1E3A8A) else Color.White
                         ),
@@ -257,6 +260,7 @@ fun CardInsightContent(
 
                     // Legend
                     LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(spendingCategories.chunked(2)) { categoryPair ->
