@@ -8,16 +8,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.nbk.insights.navigation.Screen
 import com.nbk.insights.ui.composables.LoadingIndicator
+import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.AuthViewModel
 
 @Composable
-fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
+fun LoginScreen(navController: NavController) {
+    val context = LocalContext.current
+    val viewModel: AuthViewModel = viewModel(
+        factory = remember { AppInitializer.provideAuthViewModelFactory(context) }
+    )
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -39,10 +47,7 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
         return
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF262E38)
-    ) {
+    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF262E38)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -51,21 +56,14 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(200.dp))
-            Text(
-                "Login",
-                color = Color.White,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-            )
-
+            Text("Login", color = Color.White, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 placeholder = { Text("Email", color = Color.Gray) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.White,
@@ -83,9 +81,7 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
                 onValueChange = { password = it },
                 placeholder = { Text("Password", color = Color.Gray) },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.White,
@@ -100,9 +96,7 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
 
             Button(
                 onClick = { viewModel.login(email, password) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2ED2C0)),
                 shape = RoundedCornerShape(28.dp)
             ) {
@@ -113,9 +107,7 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
 
             Button(
                 onClick = { viewModel.dummyLogin() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
                 shape = RoundedCornerShape(28.dp)
             ) {

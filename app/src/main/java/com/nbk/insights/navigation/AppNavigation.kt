@@ -4,40 +4,25 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.nbk.insights.ui.screens.AllTransactionsScreen
-import com.nbk.insights.ui.screens.HomeScreen
-import com.nbk.insights.ui.screens.InsightsScreen
-import com.nbk.insights.ui.screens.LoginScreen
-import com.nbk.insights.viewmodels.AccountsViewModel
-import com.nbk.insights.viewmodels.AuthViewModel
+import com.nbk.insights.ui.screens.*
 
 @Composable
-fun AppNavigation(
-    navController: NavHostController,
-    authViewModel: AuthViewModel,
-    accountsViewModel: AccountsViewModel
-) {
+fun AppNavigation(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screen.Login.route) {
         composable(Screen.Login.route) {
-            LoginScreen(viewModel = authViewModel, navController = navController)
+            LoginScreen(navController)
         }
         composable(Screen.Home.route) {
-            HomeScreen(
-                navController = navController,
-                onViewAllCards = { /* TODO: Implement navigation to View All Cards Screen */ },
-                onViewAllTransactions = {
-                    navController.navigate(Screen.AllTransactions.route)
-                },
-                authViewModel = authViewModel,
-                accountsViewModel = accountsViewModel
-            )
-        }
-
-        composable(Screen.Insights.route) {
-            InsightsScreen(navController = navController)
+            HomeScreen(navController)
         }
         composable(Screen.AllTransactions.route) {
-            AllTransactionsScreen(navController = navController)
+            AllTransactionsScreen(navController)
+        }
+        composable(Screen.Insights.route) {
+            InsightsScreen(navController)
+        }
+        composable(Screen.Notifications.route) {
+            NotificationScreen(navController)
         }
     }
 }
