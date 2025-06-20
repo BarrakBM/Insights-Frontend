@@ -23,7 +23,6 @@ import com.nbk.insights.ui.composables.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.asPaddingValues
 import com.nbk.insights.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,76 +70,52 @@ fun InsightsScreen(navController: NavController) {
             BottomNavigationBar(selectedTab = "Insights", navController = navController)
         }
     ) { innerPadding ->
-        val safePadding = WindowInsets.safeDrawing.asPaddingValues()
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeWindowInsets(innerPadding)
+                .padding(innerPadding)
+                .background(Color(0xFFF5F5F5)),
+            contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
-        if (showInsights && selectedCardId != null) {
-            val selectedCard = bankCards.find { it.lastFourDigits == selectedCardId }
-            selectedCard?.let { card ->
-                CardInsightContent(
-                    card = card,
-                    onDismiss = {
-                        showInsights = false
-                        selectedCardId = null
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(safePadding)
-                )
+            // 🌟 NEW: Spending Line Chart
+            item {
+                SpendingViewAllChart()
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF5F5F5))
-                    .padding(innerPadding)
-                    .padding(safePadding),
-                contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp)),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Total Balance", fontSize = 12.sp, color = Color.Gray, textAlign = TextAlign.Center)
-                                Text("KD", fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Medium)
-                                Text("12,222.21", fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.Bold)
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Active Cards", fontSize = 12.sp, color = Color.Gray)
-                                Text("4", fontSize = 20.sp, color = Color.Black, fontWeight = FontWeight.Bold)
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("This Month", fontSize = 12.sp, color = Color.Gray)
-                                Text("-KD 1,230", fontSize = 16.sp, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-                items(bankCards) { card ->
-                    CardBarItemWithActions(
-                        card = card,
-                        onViewInsights = {
-                            selectedCardId = card.lastFourDigits
-                            showInsights = true
-                        },
-                        onViewTransactions = {
-                            navController.navigate("all_transactions")
-                        },
-                        onStartBudgeting = { }
+
+            // View All Insights Button
+            item {
+                Button(
+                    onClick = { /* TODO: navigate or show all insights */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A8A))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PieChart,
+                        contentDescription = "Insights",
+                        tint = Color.White
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("View All Insights", color = Color.White)
                 }
+            }
+
+            // List of Card Items
+            items(bankCards) { card ->
+                CardBarItemWithActions(
+                    card = card,
+                    onViewInsights = {
+                        navController.navigate("card_insights/${card.lastFourDigits}")
+                    },
+                    onViewTransactions = {
+                        navController.navigate("all_transactions")
+                    },
+                    onStartBudgeting = { }
+                )
             }
         }
     }

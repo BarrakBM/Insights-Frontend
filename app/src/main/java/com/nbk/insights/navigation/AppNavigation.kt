@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.nbk.insights.data.tempfunctions.getBankCards
+import com.nbk.insights.ui.composables.CardInsightContent
 import com.nbk.insights.ui.screens.*
 
 @Composable
@@ -23,6 +25,19 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable(Screen.Notifications.route) {
             NotificationScreen(navController)
+        }
+        composable(Screen.RecurringPayments.route) {
+            RecurringPaymentsScreen(navController)
+        }
+        composable("card_insights/{cardId}") { backStackEntry ->
+            val cardId = backStackEntry.arguments?.getString("cardId")
+            val card = getBankCards().find { it.lastFourDigits == cardId }
+
+            card?.let {
+                CardInsightContent(card = it, onDismiss = {
+                    navController.popBackStack()
+                })
+            }
         }
     }
 }
