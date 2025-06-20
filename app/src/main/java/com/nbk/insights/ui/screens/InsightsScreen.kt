@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.asPaddingValues
+import com.nbk.insights.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +58,9 @@ fun InsightsScreen(navController: NavController) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Notifications */ }) {
+                    IconButton(onClick = {
+                        navController.navigate(Screen.Notifications.route)
+                    }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                     }
                 },
