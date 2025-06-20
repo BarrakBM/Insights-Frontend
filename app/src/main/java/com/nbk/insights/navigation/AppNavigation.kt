@@ -21,5 +21,8 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.Insights.route) {
             InsightsScreen(navController)
         }
+        composable(Screen.Notifications.route) {
+            NotificationScreen(navController)
+        }
     }
 }
