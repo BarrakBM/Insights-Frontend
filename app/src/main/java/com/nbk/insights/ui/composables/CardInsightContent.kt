@@ -26,7 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
 import com.nbk.insights.ui.theme.InsightsTheme
+
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
 import com.nbk.insights.ui.theme.*
+
 
 data class SpendingCategory(
     val name: String,
@@ -47,13 +53,35 @@ data class RecentTransaction(
 
 data class BudgetLimit(
     val category: String,
-    val spent: Float,
-    val limit: Float,
+    val spent: BigDecimal,
+    val limit: BigDecimal,
     val color: Color,
     val icon: ImageVector,
     val isOverBudget: Boolean = false,
-    val isNearLimit: Boolean = false
+    val isNearLimit: Boolean = false,
+    val renewsAt: String // Format: "yyyy-MM-dd"
 )
+
+// Extension functions for convenience
+fun BudgetLimit.getSpentPercentage(): Double {
+    return if (limit > BigDecimal.ZERO) {
+        (spent.divide(limit, 4, java.math.RoundingMode.HALF_UP).toDouble() * 100)
+    } else {
+        0.0
+    }
+}
+
+fun BudgetLimit.getRemainingAmount(): BigDecimal {
+    return (limit - spent).max(BigDecimal.ZERO)
+}
+
+fun BudgetLimit.isNearLimit(threshold: Double = 80.0): Boolean {
+    return getSpentPercentage() >= threshold
+}
+
+fun BudgetLimit.isOverBudget(): Boolean {
+    return spent > limit
+}
 
 @Composable
 fun CardInsightContent(
@@ -68,12 +96,14 @@ fun CardInsightContent(
     var showEditBudgetDialog by remember { mutableStateOf(false) }
     var selectedBudgetForEdit by remember { mutableStateOf<BudgetLimit?>(null) }
 
+
     var budgetLimits by remember {
         mutableStateOf(listOf(
             BudgetLimit("Dining", 450f, 400f, CategoryDining, Icons.Default.Restaurant, isOverBudget = true),
             BudgetLimit("Shopping", 680f, 800f, CategoryShopping, Icons.Default.ShoppingBag),
             BudgetLimit("Transport", 230f, 300f, CategoryTransport, Icons.Default.DirectionsCar),
             BudgetLimit("Entertainment", 180f, 200f, CategoryEntertainment, Icons.Default.Movie, isNearLimit = true)
+
         ))
     }
 
@@ -416,6 +446,7 @@ fun CardInsightContent(
     if (showAddBudgetDialog) {
         BudgetLimitDialog(
             onDismiss = { showAddBudgetDialog = false },
+
             onConfirm = { category, limit ->
                 val newBudget = BudgetLimit(
                     category = category,
@@ -429,16 +460,18 @@ fun CardInsightContent(
                         "Utilities" -> CategoryUtilities
                         "Healthcare" -> CategoryHealthcare
                         else -> CategoryOther
+
                     },
-                    icon = when (category) {
-                        "Dining" -> Icons.Default.Restaurant
-                        "Shopping" -> Icons.Default.ShoppingBag
-                        "Transport" -> Icons.Default.DirectionsCar
-                        "Entertainment" -> Icons.Default.Movie
-                        "Utilities" -> Icons.Default.Bolt
-                        "Healthcare" -> Icons.Default.LocalHospital
+                    icon = when (category.name) {
+                        "DINING" -> Icons.Default.Restaurant
+                        "SHOPPING" -> Icons.Default.ShoppingBag
+                        "TRANSPORT" -> Icons.Default.DirectionsCar
+                        "ENTERTAINMENT" -> Icons.Default.Movie
+                        "FOOD_AND_GROCERIES" -> Icons.Default.ShoppingCart
+                        "OTHER" -> Icons.Default.MoreHoriz
                         else -> Icons.Default.MoreHoriz
-                    }
+                    },
+                    renewsAt = renewsAt
                 )
                 budgetLimits = budgetLimits + newBudget
                 showAddBudgetDialog = false
@@ -453,13 +486,16 @@ fun CardInsightContent(
                 showEditBudgetDialog = false
                 selectedBudgetForEdit = null
             },
-            onUpdate = { newLimit ->
+
+            onUpdate = { newLimit, renewsAt ->
+                // Update the budget limit
                 budgetLimits = budgetLimits.map { budget ->
                     if (budget.category == selectedBudgetForEdit!!.category) {
                         budget.copy(
                             limit = newLimit,
+                            renewsAt = renewsAt,
                             isOverBudget = budget.spent > newLimit,
-                            isNearLimit = !budget.isOverBudget && (budget.spent / newLimit) >= 0.8f
+                            isNearLimit = !budget.isOverBudget() && budget.getSpentPercentage() >= 80.0
                         )
                     } else {
                         budget
