@@ -18,6 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.Gray100
+import com.nbk.insights.ui.theme.Gray500
+import com.nbk.insights.ui.theme.NBKBlue
 
 @Composable
 fun CardBarItemWithDropdown(
@@ -45,18 +48,17 @@ fun CardBarItemWithDropdown(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Card Icon
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFF3F4F6)),
+                        .background(Gray100),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.CreditCard,
                         contentDescription = "Card",
-                        tint = Color(0xFF6B7280),
+                        tint = Gray500,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -89,7 +91,6 @@ fun CardBarItemWithDropdown(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Dropdown Menu Button
                 Box {
                     IconButton(onClick = { expanded = true }) {
                         Icon(
@@ -113,7 +114,7 @@ fun CardBarItemWithDropdown(
                                         Icons.Default.BarChart,
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp),
-                                        tint = Color(0xFF1E3A8A)
+                                        tint = NBKBlue
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("View Insights")
@@ -133,7 +134,7 @@ fun CardBarItemWithDropdown(
                                         Icons.Default.TrendingUp,
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp),
-                                        tint = Color(0xFF1E3A8A)
+                                        tint = NBKBlue
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Start Budgeting")
@@ -153,7 +154,7 @@ fun CardBarItemWithDropdown(
                                         Icons.Default.List,
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp),
-                                        tint = Color(0xFF1E3A8A)
+                                        tint = NBKBlue
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("View All Transactions")

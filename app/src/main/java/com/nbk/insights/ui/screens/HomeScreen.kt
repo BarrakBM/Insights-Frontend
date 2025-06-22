@@ -23,6 +23,7 @@ import com.nbk.insights.navigation.Screen
 import com.nbk.insights.ui.composables.*
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.*
+import com.nbk.insights.ui.theme.*
 import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +84,7 @@ fun HomeScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
             )
         },
         bottomBar = {
@@ -93,7 +94,7 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(BackgroundLight)
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 16.dp),
@@ -110,9 +111,8 @@ fun HomeScreen(
                 ) {
                     Text("My Cards", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     TextButton(onClick = {
-                        /* TODO: Implement navigation to View All Cards Screen */
                     }) {
-                        Text("View All Cards", color = Color(0xFF1E3A8A))
+                        Text("View All Cards", color = NBKBlue)
                     }
                 }
             }
@@ -127,7 +127,7 @@ fun HomeScreen(
                     TextButton(onClick = {
                         navController.navigate(Screen.AllTransactions.route)
                     }) {
-                        Text("View All", color = Color(0xFF1E3A8A))
+                        Text("View All", color = NBKBlue)
                     }
                 }
             }

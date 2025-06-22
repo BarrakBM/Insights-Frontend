@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.statusBars
+import com.nbk.insights.ui.theme.NBKBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,13 +37,13 @@ fun HomeTopBar(username: String?) {
             }
         },
         actions = {
-            IconButton(onClick = { /* Notifications */ }) {
+            IconButton(onClick = { }) {
                 Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
             }
-            IconButton(onClick = { /* Profile */ }) {
+            IconButton(onClick = { }) {
                 Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White)
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
     )
 }

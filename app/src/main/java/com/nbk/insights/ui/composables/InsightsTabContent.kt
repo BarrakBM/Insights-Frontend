@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.*
 
 @Composable
 fun InsightsTabContent(
@@ -24,7 +25,6 @@ fun InsightsTabContent(
 ) {
     when (selectedTab) {
         0 -> {
-            // Show Insights Tab
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -36,7 +36,6 @@ fun InsightsTabContent(
                     color = Color.Black
                 )
 
-                // Sample spending categories
                 val categories = listOf(
                     "Dining" to 45f,
                     "Shopping" to 30f,
@@ -56,11 +55,11 @@ fun InsightsTabContent(
                 Text(
                     text = "💡 You spent 23% more on dining this month compared to last month.",
                     fontSize = 14.sp,
-                    color = Color(0xFF7C3AED),
+                    color = Purple,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            Color(0xFF7C3AED).copy(alpha = 0.1f),
+                            PurpleAlpha10,
                             RoundedCornerShape(8.dp)
                         )
                         .padding(12.dp)
@@ -68,7 +67,6 @@ fun InsightsTabContent(
             }
         }
         1 -> {
-            // Transactions Tab
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,7 +76,7 @@ fun InsightsTabContent(
                     onClick = onViewAllTransactions,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF3F4F6)
+                        containerColor = Gray100
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -99,17 +97,16 @@ fun InsightsTabContent(
             }
         }
         2 -> {
-            // Budget Planning Tab
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Button(
-                    onClick = { /* TODO: Navigate to budget planning */ },
+                    onClick = { },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E3A8A)
+                        containerColor = NBKBlue
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -164,7 +161,7 @@ fun SpendingCategoryBar(
                 .fillMaxWidth()
                 .height(6.dp)
                 .clip(RoundedCornerShape(3.dp))
-                .background(Color(0xFFF3F4F6))
+                .background(Gray100)
         ) {
             Box(
                 modifier = Modifier
@@ -173,11 +170,11 @@ fun SpendingCategoryBar(
                     .clip(RoundedCornerShape(3.dp))
                     .background(
                         when (category) {
-                            "Dining" -> Color(0xFFEF4444)
-                            "Shopping" -> Color(0xFF8B5CF6)
-                            "Transportation" -> Color(0xFF06B6D4)
-                            "Entertainment" -> Color(0xFF10B981)
-                            else -> Color(0xFF6B7280)
+                            "Dining" -> CategoryDining
+                            "Shopping" -> CategoryEntertainment
+                            "Transportation" -> Cyan
+                            "Entertainment" -> CategoryTransport
+                            else -> Gray500
                         }
                     )
             )

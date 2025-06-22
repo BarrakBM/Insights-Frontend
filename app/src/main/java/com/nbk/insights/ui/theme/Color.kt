@@ -10,9 +10,6 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-
-
-// material theme
 // NBK Brand Colors
 val NBKBlue = Color(0xFF1E3A8A)
 val NBKBlueLight = Color(0xFF3B5998)
@@ -24,7 +21,7 @@ val PrimaryVariant = NBKBlueDark
 val OnPrimary = Color.White
 
 // Secondary Colors
-val Secondary = Color(0xFF10B981) // Emerald Green
+val Secondary = Color(0xFF10B981)
 val SecondaryVariant = Color(0xFF059669)
 val OnSecondary = Color.White
 
@@ -63,6 +60,21 @@ val CategoryEntertainment = Color(0xFF8B5CF6)
 val CategoryUtilities = Color(0xFFF59E0B)
 val CategoryHealthcare = Color(0xFFEC4899)
 val CategoryOther = Color(0xFF6B7280)
+
+// Additional colors used in composables
+val BackgroundLight = Color(0xFFF5F5F5)
+val NBKBlueAlpha10 = Color(0x1A1E3A8A)
+val NBKBlueAlpha20 = Color(0x331E3A8A)
+val LightGray = Color(0xFFF8F9FA)
+val VeryLightGray = Color(0xFFF8FAFC)
+val Purple = Color(0xFF7C3AED)
+val PurpleAlpha10 = Color(0x1A7C3AED)
+val Cyan = Color(0xFF06B6D4)
+val Blue = Color(0xFF3B82F6)
+val DarkBackground = Color(0xFF262E38)
+val LightBackground = Color(0xFFF5F4FA)
+val Teal = Color(0xFF2ED2C0)
+val Red = Color(0xFFFF0000)
 
 // Light Theme Colors
 val LightColorScheme = androidx.compose.material3.lightColorScheme(
