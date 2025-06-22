@@ -5,11 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.nbk.insights.data.repository.TransactionsRepository
 import com.nbk.insights.network.AccountsApiService
 import com.nbk.insights.network.AuthApiService
 import com.nbk.insights.network.RetrofitHelper
+import com.nbk.insights.network.TransactionApiService
 import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.AuthViewModel
+import com.nbk.insights.viewmodels.TransactionsViewModel
 import retrofit2.Retrofit
 
 object AppInitializer {
@@ -61,6 +64,14 @@ object AppInitializer {
             context,
             { retrofit -> retrofit.create(AccountsApiService::class.java) },
             { api -> AccountsViewModel(api) }
+        )
+    }
+
+    fun provideTransactionsViewModelFactory(context: Context): ViewModelProvider.Factory {
+        return provideViewModelFactoryWithoutToken(
+            context,
+            { retrofit -> retrofit.create(TransactionApiService::class.java) },
+            { api -> TransactionsViewModel(TransactionsRepository(api)) }
         )
     }
 }
