@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import com.nbk.insights.ui.composables.TransactionItem
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.TransactionsViewModel
+import com.nbk.insights.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,19 +53,19 @@ fun AllTransactionsScreen(navController: NavController) {
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
             )
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
-                .padding(paddingValues), // Respect top bar space
+                .background(BackgroundLight)
+                .padding(paddingValues),
             contentPadding = PaddingValues(
                 vertical = 16.dp,
                 horizontal = 16.dp
-            ), // Additional padding
+            ),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(

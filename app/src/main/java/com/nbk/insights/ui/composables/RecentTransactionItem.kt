@@ -16,13 +16,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.*
 
 @Composable
 fun RecentTransactionItem(transaction: RecentTransaction) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF8F9FA), RoundedCornerShape(8.dp))
+            .background(LightGray, RoundedCornerShape(8.dp))
             .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -62,7 +63,7 @@ fun RecentTransactionItem(transaction: RecentTransaction) {
             text = transaction.amount,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFFEF4444)
+            color = Error
         )
     }
 }
@@ -82,7 +83,7 @@ fun RecentTransactionItemPreview() {
                     "-KD 4.50",
                     "Today 2:30 PM",
                     Icons.Default.Restaurant,
-                    Color(0xFFEF4444)
+                    CategoryDining
                 )
             )
             RecentTransactionItem(
@@ -92,7 +93,7 @@ fun RecentTransactionItemPreview() {
                     "-KD 67.20",
                     "Yesterday 4:15 PM",
                     Icons.Default.ShoppingBag,
-                    Color(0xFF3B82F6)
+                    CategoryShopping
                 )
             )
         }

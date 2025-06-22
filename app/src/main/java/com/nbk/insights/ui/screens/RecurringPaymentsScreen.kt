@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.nbk.insights.ui.composables.BottomNavigationBar
+import com.nbk.insights.ui.theme.*
 
 data class RecurringPayment(
     val title: String,
@@ -34,7 +35,7 @@ fun RecurringPaymentsScreen(navController: NavController) {
                 title = {
                     Text("Recurring Payments", color = Color.White, fontSize = 20.sp)
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
             )
         },
         bottomBar = {
@@ -44,7 +45,7 @@ fun RecurringPaymentsScreen(navController: NavController) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(BackgroundLight)
                 .padding(padding)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

@@ -18,6 +18,7 @@ import com.nbk.insights.navigation.Screen
 import com.nbk.insights.ui.composables.LoadingIndicator
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.AuthViewModel
+import com.nbk.insights.ui.theme.*
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -47,7 +48,7 @@ fun LoginScreen(navController: NavController) {
         return
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF262E38)) {
+    Surface(modifier = Modifier.fillMaxSize(), color = DarkBackground) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,8 +69,8 @@ fun LoginScreen(navController: NavController) {
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.LightGray,
-                    focusedContainerColor = Color(0xFFF5F4FA),
-                    unfocusedContainerColor = Color(0xFFF5F4FA),
+                    focusedContainerColor = LightBackground,
+                    unfocusedContainerColor = LightBackground,
                     cursorColor = Color.Black
                 )
             )
@@ -86,8 +87,8 @@ fun LoginScreen(navController: NavController) {
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.LightGray,
-                    focusedContainerColor = Color(0xFFF5F4FA),
-                    unfocusedContainerColor = Color(0xFFF5F4FA),
+                    focusedContainerColor = LightBackground,
+                    unfocusedContainerColor = LightBackground,
                     cursorColor = Color.Black
                 )
             )
@@ -97,7 +98,7 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = { viewModel.login(email, password) },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2ED2C0)),
+                colors = ButtonDefaults.buttonColors(containerColor = Teal),
                 shape = RoundedCornerShape(28.dp)
             ) {
                 Text("Login", color = Color.White)
@@ -108,7 +109,7 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = { viewModel.dummyLogin() },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
+                colors = ButtonDefaults.buttonColors(containerColor = Gray500),
                 shape = RoundedCornerShape(28.dp)
             ) {
                 Text("Dummy Login (Test)", color = Color.White)
@@ -116,7 +117,7 @@ fun LoginScreen(navController: NavController) {
 
             if (!errorMessage.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(errorMessage!!, color = Color.Red)
+                Text(errorMessage!!, color = Red)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
