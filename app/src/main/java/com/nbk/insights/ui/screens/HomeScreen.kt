@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,8 +15,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.toSize
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.nbk.insights.data.tempfunctions.getRecentTransactions
@@ -40,7 +37,15 @@ fun HomeScreen(
     val accountsViewModel: AccountsViewModel = viewModel(
         factory = remember { AppInitializer.provideAccountsViewModelFactory(context) }
     )
-    val recentTransactions = remember { getRecentTransactions() }
+
+    val transactionsViewModel: TransactionsViewModel =
+        viewModel(factory = remember { AppInitializer.provideTransactionsViewModelFactory(context) })
+
+    LaunchedEffect(Unit) {
+        transactionsViewModel.fetchUserTransactions()
+    }
+    val recentTransactions by transactionsViewModel.userTransactions
+
     val bankCards = remember { getBankCards() }
     val firstName = authViewModel.user.value?.fullName?.split(" ")?.firstOrNull() ?: "Guest"
     val totalBalance = accountsViewModel.totalBalance.value?.totalBalance ?: BigDecimal.ZERO
@@ -54,15 +59,28 @@ fun HomeScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Hello, $firstName", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text("Welcome back!", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
+                        Text(
+                            "Hello, $firstName",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            "Welcome back!",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = {
                         navController.navigate(Screen.Notifications.route)
                     }) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
+                        Icon(
+                            Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Color.White
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
@@ -113,7 +131,9 @@ fun HomeScreen(
                     }
                 }
             }
-            items(recentTransactions.take(5)) { TransactionItem(transaction = it) }
+            items(recentTransactions?.take(5) ?: emptyList()) {
+                TransactionItem(transaction = it)
+            }
         }
     }
 }
