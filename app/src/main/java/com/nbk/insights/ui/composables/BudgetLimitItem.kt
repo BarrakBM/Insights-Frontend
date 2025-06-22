@@ -18,11 +18,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.InsightsTheme
-
 import java.math.BigDecimal
 import java.math.RoundingMode
-import com.nbk.insights.ui.theme.*
-
 
 @Composable
 fun BudgetLimitItem(
@@ -37,6 +34,10 @@ fun BudgetLimitItem(
     }
 
     val remaining = budget.getRemainingAmount()
+
+    // Use extension functions for consistent logic
+    val isOverBudget = budget.isOverBudget()
+    val isNearLimit = budget.isNearLimit()
 
     Column(
         modifier = Modifier
@@ -81,38 +82,36 @@ fun BudgetLimitItem(
                     text = "KD ${budget.spent.setScale(3, RoundingMode.HALF_UP).toPlainString()} / KD ${budget.limit.setScale(3, RoundingMode.HALF_UP).toPlainString()}",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-
-                    color = if (budget.isOverBudget) Error else Color.Black
-
+                    color = if (isOverBudget) Color(0xFFEF4444) else Color.Black
                 )
-                if (budget.isOverBudget()) {
+                if (isOverBudget) {
                     Text(
                         text = "Over budget",
                         fontSize = 12.sp,
-                        color = Error
+                        color = Color(0xFFEF4444)
                     )
-                } else if (budget.isNearLimit()) {
+                } else if (isNearLimit) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             Icons.Default.Warning,
                             contentDescription = null,
-                            tint = Warning,
+                            tint = Color(0xFFF59E0B),
                             modifier = Modifier.size(12.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Near limit!",
                             fontSize = 12.sp,
-                            color = Warning
+                            color = Color(0xFFF59E0B)
                         )
                     }
                 } else {
                     Text(
                         text = "KD ${remaining.setScale(3, RoundingMode.HALF_UP).toPlainString()} remaining",
                         fontSize = 12.sp,
-                        color = Success
+                        color = Color(0xFF10B981)
                     )
                 }
             }
@@ -127,13 +126,11 @@ fun BudgetLimitItem(
                 .height(8.dp)
                 .clip(RoundedCornerShape(4.dp)),
             color = when {
-
-                budget.isOverBudget -> Error
-                budget.isNearLimit -> Warning
-
+                isOverBudget -> Color(0xFFEF4444)
+                isNearLimit -> Color(0xFFF59E0B)
                 else -> budget.color
             },
-            trackColor = Gray100
+            trackColor = Color(0xFFF3F4F6)
         )
     }
 }
@@ -148,7 +145,6 @@ fun BudgetLimitItemPreview() {
         ) {
             BudgetLimitItem(
                 BudgetLimit(
-
                     category = "Dining",
                     spent = BigDecimal("450.000"),
                     limit = BigDecimal("400.000"),
@@ -167,20 +163,18 @@ fun BudgetLimitItemPreview() {
                     color = Color(0xFF3B82F6),
                     icon = Icons.Default.ShoppingBag,
                     renewsAt = "2025-07-15"
-
                 ),
                 onClick = { }
             )
             BudgetLimitItem(
                 BudgetLimit(
-
                     category = "Entertainment",
                     spent = BigDecimal("180.000"),
                     limit = BigDecimal("200.000"),
                     color = Color(0xFFF59E0B),
                     icon = Icons.Default.Movie,
                     isNearLimit = true,
-
+                    renewsAt = "2025-07-15"
                 ),
                 onClick = { }
             )

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,14 +28,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.nbk.insights.data.dtos.Category
 import com.nbk.insights.ui.theme.InsightsTheme
-
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-import com.nbk.insights.ui.theme.*
-
 
 data class BudgetCategoryUI(
     val category: Category,
@@ -55,15 +52,36 @@ fun BudgetLimitDialog(
     var errorMessage by remember { mutableStateOf("") }
 
     val categories = listOf(
-
-        BudgetCategory("Dining", Icons.Default.Restaurant, CategoryDining),
-        BudgetCategory("Shopping", Icons.Default.ShoppingBag, CategoryShopping),
-        BudgetCategory("Transport", Icons.Default.DirectionsCar, CategoryTransport),
-        BudgetCategory("Entertainment", Icons.Default.Movie, CategoryEntertainment),
-        BudgetCategory("Utilities", Icons.Default.Bolt, CategoryUtilities),
-        BudgetCategory("Healthcare", Icons.Default.LocalHospital, CategoryHealthcare),
-        BudgetCategory("Other", Icons.Default.MoreHoriz, CategoryOther)
-
+        BudgetCategoryUI(
+            category = Category.DINING,
+            displayName = "Dining",
+            icon = Icons.Default.Restaurant,
+            color = Color(0xFFEF4444)
+        ),
+        BudgetCategoryUI(
+            category = Category.SHOPPING,
+            displayName = "Shopping",
+            icon = Icons.Default.ShoppingBag,
+            color = Color(0xFF3B82F6)
+        ),
+        BudgetCategoryUI(
+            category = Category.ENTERTAINMENT,
+            displayName = "Entertainment",
+            icon = Icons.Default.Movie,
+            color = Color(0xFF8B5CF6)
+        ),
+        BudgetCategoryUI(
+            category = Category.FOOD_AND_GROCERIES,
+            displayName = "Groceries",
+            icon = Icons.Default.ShoppingCart,
+            color = Color(0xFFF59E0B)
+        ),
+        BudgetCategoryUI(
+            category = Category.OTHER,
+            displayName = "Other",
+            icon = Icons.Default.MoreHoriz,
+            color = Color(0xFF6B7280)
+        )
     )
 
     val today = LocalDate.now()
@@ -163,8 +181,7 @@ fun BudgetLimitDialog(
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(categories.size) { index ->
-                            val categoryUI = categories[index]
+                        items(categories) { categoryUI ->
                             FilterChip(
                                 selected = selectedCategory == categoryUI.category,
                                 onClick = { selectedCategory = categoryUI.category },
@@ -234,12 +251,11 @@ fun BudgetLimitDialog(
                         singleLine = true,
                         isError = showError,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NBKBlue,
-                            unfocusedBorderColor = Gray200
+                            focusedBorderColor = Color(0xFF1E3A8A),
+                            unfocusedBorderColor = Color(0xFFE5E7EB)
                         )
                     )
                 }
-
 
                 // Renewal Day Selection
                 Column(
@@ -300,7 +316,7 @@ fun BudgetLimitDialog(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = Color(0xFF1E3A8A).copy(alpha = 0.1f)
-       )
+                        )
                     ) {
                         Row(
                             modifier = Modifier
@@ -325,7 +341,6 @@ fun BudgetLimitDialog(
                     }
                 }
 
-
                 // Error message
                 if (showError) {
                     Text(
@@ -337,14 +352,11 @@ fun BudgetLimitDialog(
                 }
 
                 // Info Message
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-
-                            NBKBlueAlpha10,
-
+                            Color(0xFF1E3A8A).copy(alpha = 0.1f),
                             RoundedCornerShape(8.dp)
                         )
                         .padding(12.dp),
@@ -353,17 +365,13 @@ fun BudgetLimitDialog(
                     Icon(
                         Icons.Default.Info,
                         contentDescription = null,
-
-                        tint = NBKBlue,
-
+                        tint = Color(0xFF1E3A8A),
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = "You'll receive notifications when you reach 80% of your budget limit.",
                         fontSize = 12.sp,
-
-                        color = NBKBlue,
-
+                        color = Color(0xFF1E3A8A),
                         lineHeight = 16.sp
                     )
                 }
@@ -376,9 +384,9 @@ fun BudgetLimitDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Gray500
+                            contentColor = Color(0xFF6B7280)
                         ),
-                        border = BorderStroke(1.dp, Gray200)
+                        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
                     ) {
                         Text(
                             text = "Cancel",
@@ -403,7 +411,7 @@ fun BudgetLimitDialog(
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = NBKBlue
+                            containerColor = Color(0xFF1E3A8A)
                         )
                     ) {
                         Text(

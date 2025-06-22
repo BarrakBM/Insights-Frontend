@@ -25,14 +25,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.nbk.insights.ui.theme.InsightsTheme
-
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-import com.nbk.insights.ui.theme.*
-
 
 @Composable
 fun EditBudgetDialog(
@@ -41,8 +37,16 @@ fun EditBudgetDialog(
     onUpdate: (newLimit: BigDecimal, renewsAt: String) -> Unit,
     onDelete: () -> Unit
 ) {
-    var budgetLimit by remember { mutableStateOf(budget.limit.toString()) }
-    var selectedDay by remember { mutableStateOf(1) } // Default to 1st of month since renewsAt is not in current data class
+    var budgetLimit by remember { mutableStateOf(budget.limit.setScale(3, RoundingMode.HALF_UP).toPlainString()) }
+    var selectedDay by remember {
+        mutableStateOf(
+            try {
+                LocalDate.parse(budget.renewsAt).dayOfMonth
+            } catch (e: Exception) {
+                1 // Default to 1st of month if parsing fails
+            }
+        )
+    }
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
@@ -108,6 +112,7 @@ fun EditBudgetDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -131,6 +136,7 @@ fun EditBudgetDialog(
                     }
                 }
 
+                // Category Display
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -166,13 +172,14 @@ fun EditBudgetDialog(
                             color = Color.Black
                         )
                         Text(
-                            text = "Current spending: KD ${String.format("%.3f", budget.spent)}",
+                            text = "Current spending: KD ${budget.spent.setScale(3, RoundingMode.HALF_UP).toPlainString()}",
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
                     }
                 }
 
+                // Budget Limit Input
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -211,12 +218,11 @@ fun EditBudgetDialog(
                         singleLine = true,
                         isError = showError,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NBKBlue,
-                            unfocusedBorderColor = Gray200
+                            focusedBorderColor = Color(0xFF1E3A8A),
+                            unfocusedBorderColor = Color(0xFFE5E7EB)
                         )
                     )
                 }
-
 
                 // Renewal Day Selection
                 Column(
@@ -277,14 +283,6 @@ fun EditBudgetDialog(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = Color(0xFF1E3A8A).copy(alpha = 0.1f)
-
-//                     if (showError) {
-//                         Text(
-//                             text = "Please enter a valid amount",
-//                             fontSize = 12.sp,
-//                             color = Error,
-//                             modifier = Modifier.padding(start = 4.dp)
-
                         )
                     ) {
                         Row(
@@ -310,18 +308,15 @@ fun EditBudgetDialog(
                     }
                 }
 
-
                 // Current vs New Comparison
                 parseBudgetAmount(budgetLimit)?.let { newLimit ->
-                    val currentLimitBD = BigDecimal(budget.limit.toString())
-                    val difference = newLimit.subtract(currentLimitBD)
-
+                    val difference = newLimit.subtract(budget.limit)
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                VeryLightGray,
+                                Color(0xFFF8FAFC),
                                 RoundedCornerShape(8.dp)
                             )
                             .padding(12.dp),
@@ -334,7 +329,7 @@ fun EditBudgetDialog(
                                 color = Color.Gray
                             )
                             Text(
-                                text = "KD ${String.format("%.3f", budget.limit)}",
+                                text = "KD ${budget.limit.setScale(3, RoundingMode.HALF_UP).toPlainString()}",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
@@ -358,9 +353,11 @@ fun EditBudgetDialog(
                                 text = "KD ${newLimit.setScale(3, RoundingMode.HALF_UP).toPlainString()}",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-
-                                color = if (difference > 0) Success else if (difference < 0) Error else Color.Black
-
+                                color = when {
+                                    difference > BigDecimal.ZERO -> Color(0xFF10B981)
+                                    difference < BigDecimal.ZERO -> Color(0xFFEF4444)
+                                    else -> Color.Black
+                                }
                             )
                         }
                     }
@@ -373,14 +370,11 @@ fun EditBudgetDialog(
                                 "↘️ Decrease of KD ${difference.abs().setScale(3, RoundingMode.HALF_UP).toPlainString()}"
                             },
                             fontSize = 14.sp,
-
-                            color = if (difference > 0) Success else Error,
-
+                            color = if (difference > BigDecimal.ZERO) Color(0xFF10B981) else Color(0xFFEF4444),
                             modifier = Modifier.padding(horizontal = 4.dp)
                         )
                     }
                 }
-
 
                 // Error message
                 if (showError) {
@@ -418,11 +412,11 @@ fun EditBudgetDialog(
                 }
 
                 // Action Buttons
-
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Update Button
                     Button(
                         onClick = {
                             val amount = parseBudgetAmount(budgetLimit)
@@ -439,7 +433,7 @@ fun EditBudgetDialog(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = NBKBlue
+                            containerColor = Color(0xFF1E3A8A)
                         )
                     ) {
                         Text(
@@ -453,13 +447,14 @@ fun EditBudgetDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // Cancel Button
                         OutlinedButton(
                             onClick = onDismiss,
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Gray500
+                                contentColor = Color(0xFF6B7280)
                             ),
-                            border = BorderStroke(1.dp, Gray200)
+                            border = BorderStroke(1.dp, Color(0xFFE5E7EB))
                         ) {
                             Text(
                                 text = "Cancel",
@@ -468,13 +463,14 @@ fun EditBudgetDialog(
                             )
                         }
 
+                        // Delete Button
                         OutlinedButton(
                             onClick = { showDeleteConfirmation = true },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Error
+                                contentColor = Color(0xFFEF4444)
                             ),
-                            border = BorderStroke(1.dp, Error)
+                            border = BorderStroke(1.dp, Color(0xFFEF4444))
                         ) {
                             Icon(
                                 Icons.Default.Delete,
@@ -494,6 +490,7 @@ fun EditBudgetDialog(
         }
     }
 
+    // Delete Confirmation Dialog
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
@@ -513,7 +510,7 @@ fun EditBudgetDialog(
                         onDelete()
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = Error
+                        contentColor = Color(0xFFEF4444)
                     )
                 ) {
                     Text("Delete")
@@ -536,17 +533,17 @@ fun EditBudgetDialogPreview() {
     InsightsTheme {
         EditBudgetDialog(
             budget = BudgetLimit(
-                "Dining",
-                450f,
-                400f,
-                CategoryDining,
-                Icons.Default.Restaurant,
-                isOverBudget = true
+                category = "Dining",
+                spent = BigDecimal("450.000"),
+                limit = BigDecimal("400.000"),
+                color = Color(0xFFEF4444),
+                icon = Icons.Default.Restaurant,
+                isOverBudget = true,
+                renewsAt = "2025-07-15"
             ),
             onDismiss = { },
-            onUpdate = { },
+            onUpdate = { _, _ -> },
             onDelete = { }
         )
     }
 }
-

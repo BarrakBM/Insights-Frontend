@@ -25,14 +25,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
+import com.nbk.insights.data.dtos.Category
 import com.nbk.insights.ui.theme.InsightsTheme
-
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-import com.nbk.insights.ui.theme.*
-
 
 data class SpendingCategory(
     val name: String,
@@ -96,14 +93,47 @@ fun CardInsightContent(
     var showEditBudgetDialog by remember { mutableStateOf(false) }
     var selectedBudgetForEdit by remember { mutableStateOf<BudgetLimit?>(null) }
 
+    // Default renewal date (15th of next month)
+    val defaultRenewalDate = LocalDate.now().plusMonths(1).withDayOfMonth(15)
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
+    // Budget limits with proper BigDecimal values and renewsAt
     var budgetLimits by remember {
         mutableStateOf(listOf(
-            BudgetLimit("Dining", 450f, 400f, CategoryDining, Icons.Default.Restaurant, isOverBudget = true),
-            BudgetLimit("Shopping", 680f, 800f, CategoryShopping, Icons.Default.ShoppingBag),
-            BudgetLimit("Transport", 230f, 300f, CategoryTransport, Icons.Default.DirectionsCar),
-            BudgetLimit("Entertainment", 180f, 200f, CategoryEntertainment, Icons.Default.Movie, isNearLimit = true)
-
+            BudgetLimit(
+                category = "Dining",
+                spent = BigDecimal("450.000"),
+                limit = BigDecimal("400.000"),
+                color = Color(0xFFEF4444),
+                icon = Icons.Default.Restaurant,
+                isOverBudget = true,
+                renewsAt = defaultRenewalDate
+            ),
+            BudgetLimit(
+                category = "Shopping",
+                spent = BigDecimal("680.000"),
+                limit = BigDecimal("800.000"),
+                color = Color(0xFF3B82F6),
+                icon = Icons.Default.ShoppingBag,
+                renewsAt = defaultRenewalDate
+            ),
+            BudgetLimit(
+                category = "Transport",
+                spent = BigDecimal("230.000"),
+                limit = BigDecimal("300.000"),
+                color = Color(0xFF10B981),
+                icon = Icons.Default.DirectionsCar,
+                renewsAt = defaultRenewalDate
+            ),
+            BudgetLimit(
+                category = "Entertainment",
+                spent = BigDecimal("180.000"),
+                limit = BigDecimal("200.000"),
+                color = Color(0xFFF59E0B),
+                icon = Icons.Default.Movie,
+                isNearLimit = true,
+                renewsAt = defaultRenewalDate
+            )
         ))
     }
 
@@ -113,33 +143,34 @@ fun CardInsightContent(
     val spendingData = listOf(3500f, 3200f, 3800f)
 
     val spendingCategories = listOf(
-        SpendingCategory("Dining", 1140f, 30f, CategoryDining, Icons.Default.Restaurant),
-        SpendingCategory("Shopping", 912f, 24f, CategoryShopping, Icons.Default.ShoppingBag),
-        SpendingCategory("Transport", 608f, 16f, CategoryTransport, Icons.Default.DirectionsCar),
-        SpendingCategory("Entertainment", 456f, 12f, CategoryEntertainment, Icons.Default.Movie),
-        SpendingCategory("Utilities", 380f, 10f, CategoryUtilities, Icons.Default.Bolt),
-        SpendingCategory("Healthcare", 304f, 8f, CategoryHealthcare, Icons.Default.LocalHospital)
+        SpendingCategory("Dining", 1140f, 30f, Color(0xFFEF4444), Icons.Default.Restaurant),
+        SpendingCategory("Shopping", 912f, 24f, Color(0xFF3B82F6), Icons.Default.ShoppingBag),
+        SpendingCategory("Transport", 608f, 16f, Color(0xFF10B981), Icons.Default.DirectionsCar),
+        SpendingCategory("Entertainment", 456f, 12f, Color(0xFF8B5CF6), Icons.Default.Movie),
+        SpendingCategory("Utilities", 380f, 10f, Color(0xFFF59E0B), Icons.Default.Bolt),
+        SpendingCategory("Healthcare", 304f, 8f, Color(0xFFEC4899), Icons.Default.LocalHospital)
     )
 
     val recentTransactions = listOf(
-        RecentTransaction("Starbucks Coffee", "Dining", "-KD 4.50", "Today 2:30 PM", Icons.Default.Restaurant, CategoryDining),
-        RecentTransaction("Amazon Purchase", "Shopping", "-KD 67.20", "Yesterday 4:15 PM", Icons.Default.ShoppingBag, CategoryShopping),
-        RecentTransaction("Uber Ride", "Transport", "-KD 12.30", "Dec 20, 8:45 PM", Icons.Default.DirectionsCar, CategoryTransport)
+        RecentTransaction("Starbucks Coffee", "Dining", "-KD 4.50", "Today 2:30 PM", Icons.Default.Restaurant, Color(0xFFEF4444)),
+        RecentTransaction("Amazon Purchase", "Shopping", "-KD 67.20", "Yesterday 4:15 PM", Icons.Default.ShoppingBag, Color(0xFF3B82F6)),
+        RecentTransaction("Uber Ride", "Transport", "-KD 12.30", "Dec 20, 8:45 PM", Icons.Default.DirectionsCar, Color(0xFF10B981))
     )
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundLight),
+            .background(Color(0xFFF5F5F5)),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
+        // Header
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp)),
-                colors = CardDefaults.cardColors(containerColor = NBKBlue),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A8A)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Row(
@@ -174,6 +205,7 @@ fun CardInsightContent(
             }
         }
 
+        // Period Selector
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -190,8 +222,8 @@ fun CardInsightContent(
                         Button(
                             onClick = { selectedPeriod = period },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedPeriod == period) NBKBlue else Color.Transparent,
-                                contentColor = if (selectedPeriod == period) Color.White else NBKBlue
+                                containerColor = if (selectedPeriod == period) Color(0xFF1E3A8A) else Color.Transparent,
+                                contentColor = if (selectedPeriod == period) Color.White else Color(0xFF1E3A8A)
                             ),
                             shape = RoundedCornerShape(20.dp)
                         ) {
@@ -202,6 +234,7 @@ fun CardInsightContent(
             }
         }
 
+        // Month Navigation
         item {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -213,7 +246,7 @@ fun CardInsightContent(
                         onClick = { selectedMonth = month },
                         modifier = Modifier.width(80.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (selectedMonth == month) NBKBlue else Color.White
+                            containerColor = if (selectedMonth == month) Color(0xFF1E3A8A) else Color.White
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
@@ -230,6 +263,7 @@ fun CardInsightContent(
             }
         }
 
+        // Spending Chart
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -251,6 +285,7 @@ fun CardInsightContent(
             }
         }
 
+        // Spending Breakdown Pie Chart
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -311,6 +346,7 @@ fun CardInsightContent(
             }
         }
 
+        // Recent Transactions
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -332,7 +368,7 @@ fun CardInsightContent(
                             color = Color.Black
                         )
                         TextButton(onClick = { }) {
-                            Text("All Categories", color = NBKBlue)
+                            Text("All Categories", color = Color(0xFF1E3A8A))
                         }
                     }
 
@@ -349,12 +385,13 @@ fun CardInsightContent(
                         onClick = { },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Show More Transactions", color = NBKBlue)
+                        Text("Show More Transactions", color = Color(0xFF1E3A8A))
                     }
                 }
             }
         }
 
+        // Budget Limits
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -381,14 +418,14 @@ fun CardInsightContent(
                             modifier = Modifier
                                 .size(40.dp)
                                 .background(
-                                    NBKBlueAlpha10,
+                                    Color(0xFF1E3A8A).copy(alpha = 0.1f),
                                     CircleShape
                                 )
                         ) {
                             Icon(
                                 Icons.Default.Add,
                                 contentDescription = "Add Budget Limit",
-                                tint = NBKBlue,
+                                tint = Color(0xFF1E3A8A),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -443,33 +480,34 @@ fun CardInsightContent(
         }
     }
 
+    // Add Budget Dialog
     if (showAddBudgetDialog) {
         BudgetLimitDialog(
             onDismiss = { showAddBudgetDialog = false },
-
-            onConfirm = { category, limit ->
+            onConfirm = { category, limit, renewsAt ->
                 val newBudget = BudgetLimit(
-                    category = category,
-                    spent = 0f,
+                    category = when (category) {
+                        Category.DINING -> "Dining"
+                        Category.SHOPPING -> "Shopping"
+                        Category.ENTERTAINMENT -> "Entertainment"
+                        Category.FOOD_AND_GROCERIES -> "Groceries"
+                        Category.OTHER -> "Other"
+                    },
+                    spent = BigDecimal.ZERO,
                     limit = limit,
                     color = when (category) {
-                        "Dining" -> CategoryDining
-                        "Shopping" -> CategoryShopping
-                        "Transport" -> CategoryTransport
-                        "Entertainment" -> CategoryEntertainment
-                        "Utilities" -> CategoryUtilities
-                        "Healthcare" -> CategoryHealthcare
-                        else -> CategoryOther
-
+                        Category.DINING -> Color(0xFFEF4444)
+                        Category.SHOPPING -> Color(0xFF3B82F6)
+                        Category.ENTERTAINMENT -> Color(0xFF8B5CF6)
+                        Category.FOOD_AND_GROCERIES -> Color(0xFFF59E0B)
+                        Category.OTHER -> Color(0xFF6B7280)
                     },
-                    icon = when (category.name) {
-                        "DINING" -> Icons.Default.Restaurant
-                        "SHOPPING" -> Icons.Default.ShoppingBag
-                        "TRANSPORT" -> Icons.Default.DirectionsCar
-                        "ENTERTAINMENT" -> Icons.Default.Movie
-                        "FOOD_AND_GROCERIES" -> Icons.Default.ShoppingCart
-                        "OTHER" -> Icons.Default.MoreHoriz
-                        else -> Icons.Default.MoreHoriz
+                    icon = when (category) {
+                        Category.DINING -> Icons.Default.Restaurant
+                        Category.SHOPPING -> Icons.Default.ShoppingBag
+                        Category.ENTERTAINMENT -> Icons.Default.Movie
+                        Category.FOOD_AND_GROCERIES -> Icons.Default.ShoppingCart
+                        Category.OTHER -> Icons.Default.MoreHoriz
                     },
                     renewsAt = renewsAt
                 )
@@ -479,6 +517,7 @@ fun CardInsightContent(
         )
     }
 
+    // Edit Budget Dialog
     if (showEditBudgetDialog && selectedBudgetForEdit != null) {
         EditBudgetDialog(
             budget = selectedBudgetForEdit!!,
@@ -486,9 +525,7 @@ fun CardInsightContent(
                 showEditBudgetDialog = false
                 selectedBudgetForEdit = null
             },
-
             onUpdate = { newLimit, renewsAt ->
-                // Update the budget limit
                 budgetLimits = budgetLimits.map { budget ->
                     if (budget.category == selectedBudgetForEdit!!.category) {
                         budget.copy(
