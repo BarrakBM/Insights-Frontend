@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,18 +22,18 @@ import androidx.navigation.NavController
 import com.nbk.insights.ui.composables.TransactionItem
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.TransactionsViewModel
-import java.time.LocalDateTime
-import kotlin.math.abs
+import com.nbk.insights.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllTransactionsScreen(navController: NavController) {
-
     val context = LocalContext.current
     val transactionsViewModel: TransactionsViewModel =
         viewModel(factory = remember { AppInitializer.provideTransactionsViewModelFactory(context) })
 
-    LaunchedEffect(Unit) { transactionsViewModel.fetchUserTransactions() }
+    LaunchedEffect(Unit) {
+        transactionsViewModel.fetchUserTransactions()
+    }
     val allTransactions by transactionsViewModel.userTransactions
 
     var searchQuery by remember { mutableStateOf("") }
@@ -68,23 +69,36 @@ fun AllTransactionsScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text("All Transactions", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(
+                        text = "All Transactions",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
             )
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(BackgroundLight)
+                //.background(Color(0xFFF5F5F5))
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(
+                vertical = 16.dp,
+                horizontal = 16.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 

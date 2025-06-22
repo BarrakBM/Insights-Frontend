@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.Gray100
+import com.nbk.insights.ui.theme.Gray500
 
 @Composable
 fun CardBarItem(card: BankCardDTO) {
@@ -40,18 +42,17 @@ fun CardBarItem(card: BankCardDTO) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Card Icon
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFF3F4F6)),
+                        .background(Gray100),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.CreditCard,
                         contentDescription = "Card",
-                        tint = Color(0xFF6B7280),
+                        tint = Gray500,
                         modifier = Modifier.size(20.dp)
                     )
                 }

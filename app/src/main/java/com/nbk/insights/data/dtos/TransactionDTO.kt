@@ -1,9 +1,6 @@
 package com.nbk.insights.data.dtos
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 data class TransactionResponse(
     val id: Long? = null,

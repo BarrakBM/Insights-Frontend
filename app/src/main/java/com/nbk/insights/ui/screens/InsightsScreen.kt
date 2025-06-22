@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import com.nbk.insights.navigation.Screen
+import com.nbk.insights.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +64,7 @@ fun InsightsScreen(navController: NavController) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
             )
         },
         bottomBar = {
@@ -76,24 +77,22 @@ fun InsightsScreen(navController: NavController) {
                 .fillMaxSize()
                 .consumeWindowInsets(innerPadding)
                 .padding(innerPadding)
-                .background(Color(0xFFF5F5F5)),
+                .background(BackgroundLight),
             contentPadding = PaddingValues(vertical = 16.dp, horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // 🌟 NEW: Spending Line Chart
             item {
                 SpendingViewAllChart()
             }
 
-            // View All Insights Button
             item {
                 Button(
-                    onClick = { /* TODO: navigate or show all insights */ },
+                    onClick = { },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A8A))
+                    colors = ButtonDefaults.buttonColors(containerColor = NBKBlue)
                 ) {
                     Icon(
                         imageVector = Icons.Default.PieChart,
@@ -106,7 +105,6 @@ fun InsightsScreen(navController: NavController) {
                 }
             }
 
-            // List of Card Items
             items(bankCards) { card ->
                 CardBarItemWithActions(
                     card = card,
