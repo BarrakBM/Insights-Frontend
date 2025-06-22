@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.NBKBlue
 
 @Composable
 fun CardItem(card: BankCardDTO) {
@@ -24,7 +25,7 @@ fun CardItem(card: BankCardDTO) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E3A8A)
+            containerColor = NBKBlue
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {

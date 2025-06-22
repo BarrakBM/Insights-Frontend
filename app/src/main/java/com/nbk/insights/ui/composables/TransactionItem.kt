@@ -21,6 +21,7 @@ import com.nbk.insights.data.dtos.TransactionResponse
 import com.nbk.insights.data.dtos.MCC
 import com.nbk.insights.data.dtos.TransactionType
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.*
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -74,20 +75,19 @@ fun TransactionItem(transaction: TransactionResponse) {
                         color = Color.Black
                     )
 
-                    // Show subcategory if available
                     transaction.mcc.subCategory?.let { subCategory ->
                         Text(
                             text = subCategory,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Normal,
-                            color = Color(0xFF6B7280)
+                            color = Gray500
                         )
                     }
 
                     Text(
                         text = formatDateTime(transaction.createdAt),
                         fontSize = 12.sp,
-                        color = Color(0xFF9CA3AF)
+                        color = Gray400
                     )
                 }
             }
@@ -102,12 +102,11 @@ fun TransactionItem(transaction: TransactionResponse) {
                     color = determineTransactionColor(transaction)
                 )
 
-                // Show transaction type indicator
                 transaction.transactionType?.let { type ->
                     Text(
                         text = type.name.lowercase().replaceFirstChar { it.uppercase() },
                         fontSize = 10.sp,
-                        color = Color(0xFF9CA3AF),
+                        color = Gray400,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -116,28 +115,23 @@ fun TransactionItem(transaction: TransactionResponse) {
     }
 }
 
-// Helper function to format LocalDateTime properly
 fun formatDateTime(dateTime: String): String {
     return try {
         val parsedDateTime = LocalDateTime.parse(dateTime)
         val formatter = DateTimeFormatter.ofPattern("MMM dd, HH:mm")
         parsedDateTime.format(formatter)
     } catch (e: Exception) {
-        // Fallback for different date formats
         try {
-            // Try parsing ISO format with different patterns
             val isoFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
             val parsedDateTime = LocalDateTime.parse(dateTime, isoFormatter)
             val displayFormatter = DateTimeFormatter.ofPattern("MMM dd, HH:mm")
             parsedDateTime.format(displayFormatter)
         } catch (e2: Exception) {
-            // If all parsing fails, return the original string
             dateTime
         }
     }
 }
 
-// Helper function to format amount with proper sign and currency
 fun formatAmount(amount: BigDecimal, transactionType: TransactionType?): String {
     val absAmount = amount.abs()
     val sign = when (transactionType) {
@@ -148,16 +142,14 @@ fun formatAmount(amount: BigDecimal, transactionType: TransactionType?): String 
     return "${sign}KD ${String.format("%.3f", absAmount)}"
 }
 
-// Helper function to determine transaction color based on type
 fun determineTransactionColor(transaction: TransactionResponse): Color {
     return when (transaction.transactionType) {
-        TransactionType.CREDIT -> Color(0xFF10B981) // Green for credit/income
-        TransactionType.DEBIT -> Color(0xFFEF4444)  // Red for debit/expense
-        else -> Color(0xFF6B7280) // Gray for unknown
+        TransactionType.CREDIT -> Success
+        TransactionType.DEBIT -> Error
+        else -> Gray500
     }
 }
 
-// Enhanced helper functions to map categories to icons and colors
 fun getIconForCategory(category: String?): androidx.compose.ui.graphics.vector.ImageVector {
     return when (category?.lowercase()) {
         "dining", "food", "restaurant", "fast food" -> Icons.Default.RestaurantMenu
@@ -179,20 +171,20 @@ fun getIconForCategory(category: String?): androidx.compose.ui.graphics.vector.I
 
 fun getColorForCategory(category: String?): Color {
     return when (category?.lowercase()) {
-        "dining", "food", "restaurant", "fast food" -> Color(0xFFEF4444)
-        "shopping", "retail", "grocery" -> Color(0xFF8B5CF6)
-        "transport", "transportation", "fuel", "gas" -> Color(0xFF3B82F6)
-        "income", "salary", "deposit" -> Color(0xFF10B981)
-        "entertainment", "movies", "gaming" -> Color(0xFFF59E0B)
-        "bills", "utilities", "phone", "internet" -> Color(0xFF6B7280)
-        "healthcare", "medical", "pharmacy" -> Color(0xFFDC2626)
-        "education", "books", "school" -> Color(0xFF7C3AED)
-        "travel", "hotel", "airline" -> Color(0xFF0891B2)
-        "insurance" -> Color(0xFF059669)
-        "investment", "stocks" -> Color(0xFF1D4ED8)
-        "cash", "atm" -> Color(0xFF65A30D)
-        "transfer" -> Color(0xFF9333EA)
-        else -> Color(0xFF6366F1)
+        "dining", "food", "restaurant", "fast food" -> CategoryDining
+        "shopping", "retail", "grocery" -> CategoryEntertainment
+        "transport", "transportation", "fuel", "gas" -> CategoryShopping
+        "income", "salary", "deposit" -> Success
+        "entertainment", "movies", "gaming" -> CategoryUtilities
+        "bills", "utilities", "phone", "internet" -> Gray500
+        "healthcare", "medical", "pharmacy" -> Error
+        "education", "books", "school" -> Purple
+        "travel", "hotel", "airline" -> Cyan
+        "insurance" -> CategoryTransport
+        "investment", "stocks" -> NBKBlue
+        "cash", "atm" -> Success
+        "transfer" -> CategoryEntertainment
+        else -> Info
     }
 }
 

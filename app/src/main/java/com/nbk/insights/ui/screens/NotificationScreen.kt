@@ -14,17 +14,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.nbk.insights.ui.theme.*
 
 data class Notification(
     val title: String,
     val message: String,
     val time: String
 )
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(navController: NavController) {
     val notifications = listOf(
-        Notification("Budget Alert", "You’ve spent 80% of your Dining budget.", "Today, 10:15 AM"),
+        Notification("Budget Alert", "You've spent 80% of your Dining budget.", "Today, 10:15 AM"),
         Notification("New Transaction", "Purchase of KD 67.20 at Amazon.", "Yesterday, 4:15 PM"),
         Notification("Balance Update", "Your total balance has been updated.", "Jun 18, 2025, 9:00 AM")
     )
@@ -45,14 +47,14 @@ fun NotificationScreen(navController: NavController) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
             )
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(BackgroundLight)
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 16.dp),

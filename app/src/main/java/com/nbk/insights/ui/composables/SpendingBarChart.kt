@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.CategoryDining
 
 @Composable
 fun SpendingBarChart(spendingData: List<Float>) {
@@ -40,7 +41,7 @@ fun SpendingBarChart(spendingData: List<Float>) {
                     modifier = Modifier
                         .width(60.dp)
                         .height((value / maxValue * 160).dp)
-                        .background(Color(0xFFEF4444), RoundedCornerShape(4.dp))
+                        .background(CategoryDining, RoundedCornerShape(4.dp))
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(

@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.Blue
 
 @Composable
 fun TotalBalanceCard(
@@ -31,7 +32,7 @@ fun TotalBalanceCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF3B82F6)
+            containerColor = Blue
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
