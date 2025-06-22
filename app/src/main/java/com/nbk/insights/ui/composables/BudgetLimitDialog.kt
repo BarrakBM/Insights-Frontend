@@ -4,8 +4,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,15 +19,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.nbk.insights.data.dtos.Category
 import com.nbk.insights.ui.theme.InsightsTheme
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-data class BudgetCategory(
-    val name: String,
+data class BudgetCategoryUI(
+    val category: Category,
+    val displayName: String,
     val icon: ImageVector,
     val color: Color
 )
@@ -33,21 +42,57 @@ data class BudgetCategory(
 @Composable
 fun BudgetLimitDialog(
     onDismiss: () -> Unit,
-    onConfirm: (category: String, limit: Float) -> Unit
+    onConfirm: (category: Category, limit: BigDecimal, renewsAt: String) -> Unit
 ) {
-    var selectedCategory by remember { mutableStateOf("Dining") }
+    var selectedCategory by remember { mutableStateOf(Category.DINING) }
     var budgetLimit by remember { mutableStateOf("") }
+    var selectedDay by remember { mutableStateOf(1) }
     var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     val categories = listOf(
-        BudgetCategory("Dining", Icons.Default.Restaurant, Color(0xFFEF4444)),
-        BudgetCategory("Shopping", Icons.Default.ShoppingBag, Color(0xFF3B82F6)),
-        BudgetCategory("Transport", Icons.Default.DirectionsCar, Color(0xFF10B981)),
-        BudgetCategory("Entertainment", Icons.Default.Movie, Color(0xFF8B5CF6)),
-        BudgetCategory("Utilities", Icons.Default.Bolt, Color(0xFFF59E0B)),
-        BudgetCategory("Healthcare", Icons.Default.LocalHospital, Color(0xFFEC4899)),
-        BudgetCategory("Other", Icons.Default.MoreHoriz, Color(0xFF6B7280))
+        BudgetCategoryUI(Category.DINING, "Dining", Icons.Default.Restaurant, Color(0xFFEF4444)),
+        BudgetCategoryUI(Category.ENTERTAINMENT, "Entertainment", Icons.Default.Movie, Color(0xFF8B5CF6)),
+        BudgetCategoryUI(Category.SHOPPING, "Shopping", Icons.Default.ShoppingBag, Color(0xFF3B82F6)),
+        BudgetCategoryUI(Category.FOOD_AND_GROCERIES, "Food & Groceries", Icons.Default.ShoppingCart, Color(0xFF10B981)),
+        BudgetCategoryUI(Category.OTHER, "Other", Icons.Default.MoreHoriz, Color(0xFF6B7280))
     )
+
+    val today = LocalDate.now()
+    val currentDay = today.dayOfMonth
+
+    // Calculate the renewal date based on selected day
+    val renewalDate = remember(selectedDay) {
+        val targetDate = if (selectedDay <= currentDay) {
+            // If selected day is today or in the past, use current month
+            today.withDayOfMonth(selectedDay)
+        } else {
+            // If selected day is in the future, use previous month
+            today.minusMonths(1).withDayOfMonth(
+                minOf(selectedDay, today.minusMonths(1).lengthOfMonth())
+            )
+        }
+        targetDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    }
+
+    // Helper function to parse BigDecimal from string
+    fun parseBudgetAmount(input: String): BigDecimal? {
+        return try {
+            if (input.isBlank()) null
+            else BigDecimal(input).setScale(3, RoundingMode.HALF_UP) // KWD has 3 decimal places
+        } catch (e: NumberFormatException) {
+            null
+        }
+    }
+
+    // Helper function to validate decimal input
+    fun isValidDecimalInput(input: String): Boolean {
+        if (input.isEmpty()) return true
+
+        // Allow digits, one decimal point, and up to 3 decimal places
+        val regex = Regex("^\\d*\\.?\\d{0,3}$")
+        return regex.matches(input)
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -70,7 +115,8 @@ fun BudgetLimitDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 // Header
@@ -112,30 +158,30 @@ fun BudgetLimitDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(categories.size) { index ->
-                            val category = categories[index]
+                            val categoryUI = categories[index]
                             FilterChip(
-                                selected = selectedCategory == category.name,
-                                onClick = { selectedCategory = category.name },
+                                selected = selectedCategory == categoryUI.category,
+                                onClick = { selectedCategory = categoryUI.category },
                                 label = {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         Icon(
-                                            category.icon,
+                                            categoryUI.icon,
                                             contentDescription = null,
                                             modifier = Modifier.size(16.dp),
-                                            tint = if (selectedCategory == category.name)
-                                                Color.White else category.color
+                                            tint = if (selectedCategory == categoryUI.category)
+                                                Color.White else categoryUI.color
                                         )
                                         Text(
-                                            text = category.name,
+                                            text = categoryUI.displayName,
                                             fontSize = 12.sp
                                         )
                                     }
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = category.color,
+                                    selectedContainerColor = categoryUI.color,
                                     selectedLabelColor = Color.White,
                                     selectedLeadingIconColor = Color.White
                                 )
@@ -157,9 +203,11 @@ fun BudgetLimitDialog(
 
                     OutlinedTextField(
                         value = budgetLimit,
-                        onValueChange = {
-                            budgetLimit = it.filter { char -> char.isDigit() || char == '.' }
-                            showError = false
+                        onValueChange = { newValue ->
+                            if (isValidDecimalInput(newValue)) {
+                                budgetLimit = newValue
+                                showError = false
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = {
@@ -185,15 +233,100 @@ fun BudgetLimitDialog(
                             unfocusedBorderColor = Color(0xFFE5E7EB)
                         )
                     )
+                }
 
-                    if (showError) {
-                        Text(
-                            text = "Please enter a valid amount",
-                            fontSize = 12.sp,
-                            color = Color(0xFFEF4444),
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
+                // Renewal Day Selection
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Budget Renewal Day",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = "Select the day of the month when your budget resets",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+
+                    // Day selector with a more compact grid
+                    val dayChunks = (1..31).chunked(7)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        dayChunks.forEach { dayRow ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                dayRow.forEach { day ->
+                                    FilterChip(
+                                        selected = selectedDay == day,
+                                        onClick = { selectedDay = day },
+                                        label = {
+                                            Text(
+                                                text = day.toString(),
+                                                fontSize = 12.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.width(20.dp)
+                                            )
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = Color(0xFF1E3A8A),
+                                            selectedLabelColor = Color.White
+                                        )
+                                    )
+                                }
+                                // Fill remaining space if row has fewer than 7 items
+                                repeat(7 - dayRow.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
                     }
+
+                    // Show calculated renewal date
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF1E3A8A).copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = Color(0xFF1E3A8A),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Budget will renew on: ${LocalDate.parse(renewalDate).format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}",
+                                fontSize = 12.sp,
+                                color = Color(0xFF1E3A8A),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
+                // Error message
+                if (showError) {
+                    Text(
+                        text = errorMessage,
+                        fontSize = 12.sp,
+                        color = Color(0xFFEF4444),
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
                 }
 
                 // Info Message
@@ -201,7 +334,7 @@ fun BudgetLimitDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            Color(0xFF1E3A8A).copy(alpha = 0.1f),
+                            Color(0xFF10B981).copy(alpha = 0.1f),
                             RoundedCornerShape(8.dp)
                         )
                         .padding(12.dp),
@@ -210,13 +343,13 @@ fun BudgetLimitDialog(
                     Icon(
                         Icons.Default.Info,
                         contentDescription = null,
-                        tint = Color(0xFF1E3A8A),
+                        tint = Color(0xFF10B981),
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = "You'll receive notifications when you reach 80% of your budget limit.",
                         fontSize = 12.sp,
-                        color = Color(0xFF1E3A8A),
+                        color = Color(0xFF10B981),
                         lineHeight = 16.sp
                     )
                 }
@@ -243,11 +376,16 @@ fun BudgetLimitDialog(
 
                     Button(
                         onClick = {
-                            val amount = budgetLimit.toFloatOrNull()
-                            if (amount != null && amount > 0) {
-                                onConfirm(selectedCategory, amount)
+                            val amount = parseBudgetAmount(budgetLimit)
+                            if (amount != null && amount > BigDecimal.ZERO) {
+                                onConfirm(selectedCategory, amount, renewalDate)
                             } else {
                                 showError = true
+                                errorMessage = if (budgetLimit.isBlank()) {
+                                    "Please enter a budget amount"
+                                } else {
+                                    "Please enter a valid amount greater than 0"
+                                }
                             }
                         },
                         modifier = Modifier.weight(1f),
@@ -273,7 +411,7 @@ fun BudgetLimitDialogPreview() {
     InsightsTheme {
         BudgetLimitDialog(
             onDismiss = { },
-            onConfirm = { _, _ -> }
+            onConfirm = { _, _, _ -> }
         )
     }
 }

@@ -3,9 +3,11 @@ package com.nbk.insights.ui.composables
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,23 +18,66 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.nbk.insights.ui.theme.InsightsTheme
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun EditBudgetDialog(
     budget: BudgetLimit,
     onDismiss: () -> Unit,
-    onUpdate: (newLimit: Float) -> Unit,
+    onUpdate: (newLimit: BigDecimal, renewsAt: String) -> Unit,
     onDelete: () -> Unit
 ) {
     var budgetLimit by remember { mutableStateOf(budget.limit.toString()) }
+    var selectedDay by remember { mutableStateOf(1) } // Default to 1st of month since renewsAt is not in current data class
     var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    val today = LocalDate.now()
+    val currentDay = today.dayOfMonth
+
+    // Calculate the renewal date based on selected day
+    val renewalDate = remember(selectedDay) {
+        val targetDate = if (selectedDay <= currentDay) {
+            // If selected day is today or in the past, use current month
+            today.withDayOfMonth(selectedDay)
+        } else {
+            // If selected day is in the future, use previous month
+            today.minusMonths(1).withDayOfMonth(
+                minOf(selectedDay, today.minusMonths(1).lengthOfMonth())
+            )
+        }
+        targetDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    }
+
+    // Helper function to parse BigDecimal from string
+    fun parseBudgetAmount(input: String): BigDecimal? {
+        return try {
+            if (input.isBlank()) null
+            else BigDecimal(input).setScale(3, RoundingMode.HALF_UP) // KWD has 3 decimal places
+        } catch (e: NumberFormatException) {
+            null
+        }
+    }
+
+    // Helper function to validate decimal input
+    fun isValidDecimalInput(input: String): Boolean {
+        if (input.isEmpty()) return true
+
+        // Allow digits, one decimal point, and up to 3 decimal places
+        val regex = Regex("^\\d*\\.?\\d{0,3}$")
+        return regex.matches(input)
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -55,7 +100,8 @@ fun EditBudgetDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 // Header
@@ -118,7 +164,7 @@ fun EditBudgetDialog(
                             color = Color.Black
                         )
                         Text(
-                            text = "Current spending: KD ${budget.spent.toInt()}",
+                            text = "Current spending: KD ${String.format("%.3f", budget.spent)}",
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
@@ -138,9 +184,11 @@ fun EditBudgetDialog(
 
                     OutlinedTextField(
                         value = budgetLimit,
-                        onValueChange = {
-                            budgetLimit = it.filter { char -> char.isDigit() || char == '.' }
-                            showError = false
+                        onValueChange = { newValue ->
+                            if (isValidDecimalInput(newValue)) {
+                                budgetLimit = newValue
+                                showError = false
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = {
@@ -166,21 +214,96 @@ fun EditBudgetDialog(
                             unfocusedBorderColor = Color(0xFFE5E7EB)
                         )
                     )
+                }
 
-                    if (showError) {
-                        Text(
-                            text = "Please enter a valid amount",
-                            fontSize = 12.sp,
-                            color = Color(0xFFEF4444),
-                            modifier = Modifier.padding(start = 4.dp)
+                // Renewal Day Selection
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Budget Renewal Day",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = "Select the day of the month when your budget resets",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+
+                    // Day selector with a more compact grid
+                    val dayChunks = (1..31).chunked(7)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        dayChunks.forEach { dayRow ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                dayRow.forEach { day ->
+                                    FilterChip(
+                                        selected = selectedDay == day,
+                                        onClick = { selectedDay = day },
+                                        label = {
+                                            Text(
+                                                text = day.toString(),
+                                                fontSize = 12.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.width(20.dp)
+                                            )
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = Color(0xFF1E3A8A),
+                                            selectedLabelColor = Color.White
+                                        )
+                                    )
+                                }
+                                // Fill remaining space if row has fewer than 7 items
+                                repeat(7 - dayRow.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+
+                    // Show calculated renewal date
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF1E3A8A).copy(alpha = 0.1f)
                         )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = Color(0xFF1E3A8A),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Budget will renew on: ${LocalDate.parse(renewalDate).format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}",
+                                fontSize = 12.sp,
+                                color = Color(0xFF1E3A8A),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
 
                 // Current vs New Comparison
-                if (budgetLimit.isNotEmpty() && budgetLimit.toFloatOrNull() != null) {
-                    val newLimit = budgetLimit.toFloat()
-                    val difference = newLimit - budget.limit
+                parseBudgetAmount(budgetLimit)?.let { newLimit ->
+                    val currentLimitBD = BigDecimal(budget.limit.toString())
+                    val difference = newLimit.subtract(currentLimitBD)
 
                     Row(
                         modifier = Modifier
@@ -199,7 +322,7 @@ fun EditBudgetDialog(
                                 color = Color.Gray
                             )
                             Text(
-                                text = "KD ${budget.limit.toInt()}",
+                                text = "KD ${String.format("%.3f", budget.limit)}",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
@@ -220,22 +343,65 @@ fun EditBudgetDialog(
                                 color = Color.Gray
                             )
                             Text(
-                                text = "KD ${newLimit.toInt()}",
+                                text = "KD ${newLimit.setScale(3, RoundingMode.HALF_UP).toPlainString()}",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (difference > 0) Color(0xFF10B981) else if (difference < 0) Color(0xFFEF4444) else Color.Black
+                                color = when {
+                                    difference > BigDecimal.ZERO -> Color(0xFF10B981)
+                                    difference < BigDecimal.ZERO -> Color(0xFFEF4444)
+                                    else -> Color.Black
+                                }
                             )
                         }
                     }
 
-                    if (difference != 0f) {
+                    if (difference != BigDecimal.ZERO) {
                         Text(
-                            text = if (difference > 0) "↗️ Increase of KD ${difference.toInt()}" else "↘️ Decrease of KD ${(-difference).toInt()}",
+                            text = if (difference > BigDecimal.ZERO) {
+                                "↗️ Increase of KD ${difference.setScale(3, RoundingMode.HALF_UP).toPlainString()}"
+                            } else {
+                                "↘️ Decrease of KD ${difference.abs().setScale(3, RoundingMode.HALF_UP).toPlainString()}"
+                            },
                             fontSize = 14.sp,
-                            color = if (difference > 0) Color(0xFF10B981) else Color(0xFFEF4444),
+                            color = if (difference > BigDecimal.ZERO) Color(0xFF10B981) else Color(0xFFEF4444),
                             modifier = Modifier.padding(horizontal = 4.dp)
                         )
                     }
+                }
+
+                // Error message
+                if (showError) {
+                    Text(
+                        text = errorMessage,
+                        fontSize = 12.sp,
+                        color = Color(0xFFEF4444),
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+
+                // Info Message
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Color(0xFF10B981).copy(alpha = 0.1f),
+                            RoundedCornerShape(8.dp)
+                        )
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Color(0xFF10B981),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "You'll receive notifications when you reach 80% of your budget limit.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF10B981),
+                        lineHeight = 16.sp
+                    )
                 }
 
                 // Action Buttons
@@ -246,11 +412,16 @@ fun EditBudgetDialog(
                     // Update Button
                     Button(
                         onClick = {
-                            val amount = budgetLimit.toFloatOrNull()
-                            if (amount != null && amount > 0) {
-                                onUpdate(amount)
+                            val amount = parseBudgetAmount(budgetLimit)
+                            if (amount != null && amount > BigDecimal.ZERO) {
+                                onUpdate(amount, renewalDate)
                             } else {
                                 showError = true
+                                errorMessage = if (budgetLimit.isBlank()) {
+                                    "Please enter a budget amount"
+                                } else {
+                                    "Please enter a valid amount greater than 0"
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -349,22 +520,3 @@ fun EditBudgetDialog(
     }
 }
 
-@Preview
-@Composable
-fun EditBudgetDialogPreview() {
-    InsightsTheme {
-        EditBudgetDialog(
-            budget = BudgetLimit(
-                "Dining",
-                450f,
-                400f,
-                Color(0xFFEF4444),
-                Icons.Default.Restaurant,
-                isOverBudget = true
-            ),
-            onDismiss = { },
-            onUpdate = { },
-            onDelete = { }
-        )
-    }
-}

@@ -26,6 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
 import com.nbk.insights.ui.theme.InsightsTheme
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class SpendingCategory(
     val name: String,
@@ -46,13 +49,35 @@ data class RecentTransaction(
 
 data class BudgetLimit(
     val category: String,
-    val spent: Float,
-    val limit: Float,
+    val spent: BigDecimal,
+    val limit: BigDecimal,
     val color: Color,
     val icon: ImageVector,
     val isOverBudget: Boolean = false,
-    val isNearLimit: Boolean = false
+    val isNearLimit: Boolean = false,
+    val renewsAt: String // Format: "yyyy-MM-dd"
 )
+
+// Extension functions for convenience
+fun BudgetLimit.getSpentPercentage(): Double {
+    return if (limit > BigDecimal.ZERO) {
+        (spent.divide(limit, 4, java.math.RoundingMode.HALF_UP).toDouble() * 100)
+    } else {
+        0.0
+    }
+}
+
+fun BudgetLimit.getRemainingAmount(): BigDecimal {
+    return (limit - spent).max(BigDecimal.ZERO)
+}
+
+fun BudgetLimit.isNearLimit(threshold: Double = 80.0): Boolean {
+    return getSpentPercentage() >= threshold
+}
+
+fun BudgetLimit.isOverBudget(): Boolean {
+    return spent > limit
+}
 
 @Composable
 fun CardInsightContent(
@@ -68,13 +93,47 @@ fun CardInsightContent(
     var showEditBudgetDialog by remember { mutableStateOf(false) }
     var selectedBudgetForEdit by remember { mutableStateOf<BudgetLimit?>(null) }
 
-    // Budget limits state - you can make this a mutable list to handle add/edit/delete
+    // Default renewal date (15th of next month)
+    val defaultRenewalDate = LocalDate.now().plusMonths(1).withDayOfMonth(15)
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+    // Budget limits state with proper BigDecimal values
     var budgetLimits by remember {
         mutableStateOf(listOf(
-            BudgetLimit("Dining", 450f, 400f, Color(0xFFEF4444), Icons.Default.Restaurant, isOverBudget = true),
-            BudgetLimit("Shopping", 680f, 800f, Color(0xFF3B82F6), Icons.Default.ShoppingBag),
-            BudgetLimit("Transport", 230f, 300f, Color(0xFF10B981), Icons.Default.DirectionsCar),
-            BudgetLimit("Entertainment", 180f, 200f, Color(0xFFF59E0B), Icons.Default.Movie, isNearLimit = true)
+            BudgetLimit(
+                category = "Dining",
+                spent = BigDecimal("450.000"),
+                limit = BigDecimal("400.000"),
+                color = Color(0xFFEF4444),
+                icon = Icons.Default.Restaurant,
+                isOverBudget = true,
+                renewsAt = defaultRenewalDate
+            ),
+            BudgetLimit(
+                category = "Shopping",
+                spent = BigDecimal("680.000"),
+                limit = BigDecimal("800.000"),
+                color = Color(0xFF3B82F6),
+                icon = Icons.Default.ShoppingBag,
+                renewsAt = defaultRenewalDate
+            ),
+            BudgetLimit(
+                category = "Transport",
+                spent = BigDecimal("230.000"),
+                limit = BigDecimal("300.000"),
+                color = Color(0xFF10B981),
+                icon = Icons.Default.DirectionsCar,
+                renewsAt = defaultRenewalDate
+            ),
+            BudgetLimit(
+                category = "Entertainment",
+                spent = BigDecimal("180.000"),
+                limit = BigDecimal("200.000"),
+                color = Color(0xFFF59E0B),
+                icon = Icons.Default.Movie,
+                isNearLimit = true,
+                renewsAt = defaultRenewalDate
+            )
         ))
     }
 
@@ -178,7 +237,7 @@ fun CardInsightContent(
             }
         }
 
-        // Month Navigation - FIXED VERSION
+        // Month Navigation
         item {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -433,30 +492,31 @@ fun CardInsightContent(
     if (showAddBudgetDialog) {
         BudgetLimitDialog(
             onDismiss = { showAddBudgetDialog = false },
-            onConfirm = { category, limit ->
+            onConfirm = { category, limit, renewsAt ->
                 // Add new budget to the list
                 val newBudget = BudgetLimit(
-                    category = category,
-                    spent = 0f, // Starting with 0 spent
+                    category = category.name, // Use category.name since Category is an enum
+                    spent = BigDecimal.ZERO, // Starting with 0 spent
                     limit = limit,
-                    color = when (category) {
-                        "Dining" -> Color(0xFFEF4444)
-                        "Shopping" -> Color(0xFF3B82F6)
-                        "Transport" -> Color(0xFF10B981)
-                        "Entertainment" -> Color(0xFF8B5CF6)
-                        "Utilities" -> Color(0xFFF59E0B)
-                        "Healthcare" -> Color(0xFFEC4899)
+                    color = when (category.name) {
+                        "DINING" -> Color(0xFFEF4444)
+                        "SHOPPING" -> Color(0xFF3B82F6)
+                        "TRANSPORT" -> Color(0xFF10B981)
+                        "ENTERTAINMENT" -> Color(0xFF8B5CF6)
+                        "FOOD_AND_GROCERIES" -> Color(0xFF10B981)
+                        "OTHER" -> Color(0xFF6B7280)
                         else -> Color(0xFF6B7280)
                     },
-                    icon = when (category) {
-                        "Dining" -> Icons.Default.Restaurant
-                        "Shopping" -> Icons.Default.ShoppingBag
-                        "Transport" -> Icons.Default.DirectionsCar
-                        "Entertainment" -> Icons.Default.Movie
-                        "Utilities" -> Icons.Default.Bolt
-                        "Healthcare" -> Icons.Default.LocalHospital
+                    icon = when (category.name) {
+                        "DINING" -> Icons.Default.Restaurant
+                        "SHOPPING" -> Icons.Default.ShoppingBag
+                        "TRANSPORT" -> Icons.Default.DirectionsCar
+                        "ENTERTAINMENT" -> Icons.Default.Movie
+                        "FOOD_AND_GROCERIES" -> Icons.Default.ShoppingCart
+                        "OTHER" -> Icons.Default.MoreHoriz
                         else -> Icons.Default.MoreHoriz
-                    }
+                    },
+                    renewsAt = renewsAt
                 )
                 budgetLimits = budgetLimits + newBudget
                 showAddBudgetDialog = false
@@ -472,14 +532,15 @@ fun CardInsightContent(
                 showEditBudgetDialog = false
                 selectedBudgetForEdit = null
             },
-            onUpdate = { newLimit ->
+            onUpdate = { newLimit, renewsAt ->
                 // Update the budget limit
                 budgetLimits = budgetLimits.map { budget ->
                     if (budget.category == selectedBudgetForEdit!!.category) {
                         budget.copy(
                             limit = newLimit,
+                            renewsAt = renewsAt,
                             isOverBudget = budget.spent > newLimit,
-                            isNearLimit = !budget.isOverBudget && (budget.spent / newLimit) >= 0.8f
+                            isNearLimit = !budget.isOverBudget() && budget.getSpentPercentage() >= 80.0
                         )
                     } else {
                         budget

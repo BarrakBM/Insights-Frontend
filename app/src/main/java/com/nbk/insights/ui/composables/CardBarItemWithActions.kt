@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
+import com.nbk.insights.data.dtos.Category
 import com.nbk.insights.ui.theme.InsightsTheme
 
 @Composable
@@ -200,12 +201,7 @@ fun CardBarItemWithActions(
     if (showBudgetDialog) {
         BudgetLimitDialog(
             onDismiss = { showBudgetDialog = false },
-            onConfirm = { category, limit ->
-                showBudgetDialog = false
-                // Handle the budget limit setting here
-                // You can pass this data to your ViewModel or handle it as needed
-                onStartBudgeting()
-            }
+            onConfirm = {  _, _, _  -> }  // TODO here it should call set budget limit
         )
     }
 }
