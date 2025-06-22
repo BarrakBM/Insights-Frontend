@@ -17,6 +17,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.nbk.insights.data.dtos.BottomNavBarDTO
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.NBKBlue
+import com.nbk.insights.ui.theme.NBKBlueAlpha10
 
 @Composable
 fun BottomNavigationBar(
@@ -35,7 +37,7 @@ fun BottomNavigationBar(
             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
         containerColor = Color.White,
         tonalElevation = 8.dp,
-        windowInsets = WindowInsets(0, 0, 0, 0) // Remove default window insets
+        windowInsets = WindowInsets(0, 0, 0, 0)
     ) {
         items.forEach { item ->
             NavigationBarItem(
@@ -56,11 +58,11 @@ fun BottomNavigationBar(
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF1E3A8A),
-                    selectedTextColor = Color(0xFF1E3A8A),
+                    selectedIconColor = NBKBlue,
+                    selectedTextColor = NBKBlue,
                     unselectedIconColor = Color.Gray,
                     unselectedTextColor = Color.Gray,
-                    indicatorColor = Color(0xFF1E3A8A).copy(alpha = 0.1f)
+                    indicatorColor = NBKBlueAlpha10
                 )
             )
         }

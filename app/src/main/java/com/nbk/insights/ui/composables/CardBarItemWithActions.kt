@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.data.dtos.BankCardDTO
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.ui.theme.*
 
 @Composable
 fun CardBarItemWithActions(
@@ -33,7 +34,6 @@ fun CardBarItemWithActions(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Card Information Bar
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -53,18 +53,17 @@ fun CardBarItemWithActions(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Card Icon
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFF3F4F6)),
+                            .background(Gray100),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.CreditCard,
                             contentDescription = "Card",
-                            tint = Color(0xFF6B7280),
+                            tint = Gray500,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -95,17 +94,15 @@ fun CardBarItemWithActions(
             }
         }
 
-        // Action Buttons
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // View Insights Button
             Button(
                 onClick = onViewInsights,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1E3A8A)
+                    containerColor = NBKBlue
                 ),
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(16.dp)
@@ -131,12 +128,11 @@ fun CardBarItemWithActions(
                 }
             }
 
-            // View All Transactions Button
             Button(
                 onClick = onViewTransactions,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF3F4F6)
+                    containerColor = Gray100
                 ),
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(16.dp)
@@ -162,14 +158,13 @@ fun CardBarItemWithActions(
                 }
             }
 
-            // Start Budgeting Button
             OutlinedButton(
                 onClick = { showBudgetDialog = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFF1E3A8A)
+                    contentColor = NBKBlue
                 ),
-                border = BorderStroke(1.dp, Color(0xFF1E3A8A)),
+                border = BorderStroke(1.dp, NBKBlue),
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(16.dp)
             ) {
@@ -181,13 +176,13 @@ fun CardBarItemWithActions(
                     Icon(
                         Icons.Default.TrendingUp,
                         contentDescription = "Start Budgeting",
-                        tint = Color(0xFF1E3A8A),
+                        tint = NBKBlue,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Start Budgeting",
-                        color = Color(0xFF1E3A8A),
+                        color = NBKBlue,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -196,14 +191,11 @@ fun CardBarItemWithActions(
         }
     }
 
-    // Show Budget Dialog
     if (showBudgetDialog) {
         BudgetLimitDialog(
             onDismiss = { showBudgetDialog = false },
             onConfirm = { category, limit ->
                 showBudgetDialog = false
-                // Handle the budget limit setting here
-                // You can pass this data to your ViewModel or handle it as needed
                 onStartBudgeting()
             }
         )
