@@ -23,6 +23,8 @@ import com.nbk.insights.ui.composables.TransactionItem
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.TransactionsViewModel
 import com.nbk.insights.ui.theme.*
+import java.time.LocalDateTime
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
