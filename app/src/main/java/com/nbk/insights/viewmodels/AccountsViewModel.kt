@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import com.nbk.insights.data.dtos.Account
 import com.nbk.insights.network.AccountsApiService
 import kotlinx.coroutines.launch
 import com.nbk.insights.data.dtos.AccountsResponse
@@ -20,6 +21,9 @@ class AccountsViewModel(
 
     private val _accounts = mutableStateOf<AccountsResponse?>(null)
     val accounts: State<AccountsResponse?> get() = _accounts
+
+    private val _selectedAccount = mutableStateOf<Account?>(null)
+    val selectedAccount: State<Account?> get() = _selectedAccount
 
     private val _totalBalance = mutableStateOf<TotalBalanceResponse?>(null)
     val totalBalance: State<TotalBalanceResponse?> get() = _totalBalance
@@ -51,6 +55,10 @@ class AccountsViewModel(
                 setLoading(false)
             }
         }
+    }
+
+    fun setSelectedAccount(account: Account) {
+        _selectedAccount.value = account
     }
 
     fun fetchTotalBalance() {
