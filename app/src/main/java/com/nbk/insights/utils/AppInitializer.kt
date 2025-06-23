@@ -71,7 +71,12 @@ object AppInitializer {
         return provideViewModelFactoryWithoutToken(
             context,
             { retrofit -> retrofit.create(TransactionApiService::class.java) },
-            { api -> TransactionsViewModel(TransactionsRepository(api)) }
+            { api ->
+                TransactionsViewModel(
+                    transactionsRepository = TransactionsRepository(api),
+                    transactionApiService = api
+                )
+            }
         )
     }
 }
