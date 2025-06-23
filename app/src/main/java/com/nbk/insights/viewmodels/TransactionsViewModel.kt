@@ -5,17 +5,26 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.nbk.insights.data.dtos.TransactionResponse
+import com.nbk.insights.data.dtos.RecurringPaymentResponse
 import com.nbk.insights.data.repository.TransactionsRepository
+import com.nbk.insights.network.TransactionApiService
 import kotlinx.coroutines.launch
 
 class TransactionsViewModel(
-    private val transactionsRepository: TransactionsRepository
+    private val transactionsRepository: TransactionsRepository,
+    private val transactionApiService: TransactionApiService
 ) : BaseViewModel() {
 
     private val TAG = "TransactionsViewModel"
 
     private val _userTransactions = mutableStateOf<List<TransactionResponse>?>(null)
     val userTransactions: State<List<TransactionResponse>?> get() = _userTransactions
+
+    private val _accountTransactions = mutableStateOf<List<TransactionResponse>?>(null)
+    val accountTransactions: State<List<TransactionResponse>?> get() = _accountTransactions
+
+    private val _recurringPayments = mutableStateOf<List<RecurringPaymentResponse>?>(null)
+    val recurringPayments: State<List<RecurringPaymentResponse>?> get() = _recurringPayments
 
     fun fetchUserTransactions(forceRefresh: Boolean = false) {
         viewModelScope.launch {
@@ -37,6 +46,66 @@ class TransactionsViewModel(
         }
     }
 
+    fun fetchAccountTransactions(
+        accountId: Long,
+        category: String? = null,
+        mccId: Long? = null,
+        period: String = "none",
+        year: Int? = null,
+        month: Int? = null
+    ) {
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val response = transactionApiService.fetchAccountTransactions(
+                    accountId = accountId,
+                    category = category,
+                    mccId = mccId,
+                    period = period,
+                    year = year,
+                    month = month
+                )
+                if (response.isSuccessful) {
+                    _accountTransactions.value = response.body()
+                    Log.i(TAG, "Fetched account transactions successfully for account $accountId")
+                } else {
+                    val error = "Failed to fetch account transactions: ${response.message()}"
+                    Log.w(TAG, error)
+                    setError(error)
+                }
+            } catch (e: Exception) {
+                val error = "Exception fetching account transactions: ${e.message}"
+                Log.e(TAG, error, e)
+                setError(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
+    fun detectRecurringPayments(accountId: Long) {
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val response = transactionApiService.detectRecurringPaymentsForAccount(accountId)
+                if (response.isSuccessful) {
+                    _recurringPayments.value = response.body()
+                    Log.i(TAG, "Detected recurring payments successfully for account $accountId")
+                } else {
+                    val error = "Failed to detect recurring payments: ${response.message()}"
+                    Log.w(TAG, error)
+                    setError(error)
+                }
+            } catch (e: Exception) {
+                val error = "Exception detecting recurring payments: ${e.message}"
+                Log.e(TAG, error, e)
+                setError(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
     fun refreshUserTransactions() {
         fetchUserTransactions(forceRefresh = true)
     }
@@ -44,6 +113,8 @@ class TransactionsViewModel(
     fun clearTransactionsCache() {
         transactionsRepository.clearCache()
         _userTransactions.value = null
+        _accountTransactions.value = null
+        _recurringPayments.value = null
         Log.i(TAG, "Transactions cache cleared")
     }
 }
