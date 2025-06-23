@@ -18,20 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nbk.insights.data.dtos.Category
 import com.nbk.insights.ui.theme.InsightsTheme
-import com.nbk.insights.utils.AppInitializer
-import com.nbk.insights.viewmodels.AccountsViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -44,6 +39,7 @@ data class BudgetCategoryUI(
     val color: Color
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetLimitDialog(
     onDismiss: () -> Unit,
@@ -54,6 +50,7 @@ fun BudgetLimitDialog(
     var selectedDay by remember { mutableStateOf(1) }
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
 
     val categories = listOf(
         BudgetCategoryUI(
@@ -261,7 +258,7 @@ fun BudgetLimitDialog(
                     )
                 }
 
-                // Renewal Day Selection
+                // Renewal Day Selection with Dropdown
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -278,72 +275,66 @@ fun BudgetLimitDialog(
                         color = Color.Gray
                     )
 
-                    // Day selector with a more compact grid
-                    val dayChunks = (1..31).chunked(7)
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    // Dropdown for day selection
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
                     ) {
-                        dayChunks.forEach { dayRow ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                dayRow.forEach { day ->
-                                    FilterChip(
-                                        selected = selectedDay == day,
-                                        onClick = { selectedDay = day },
-                                        label = {
-                                            Text(
-                                                text = day.toString(),
-                                                fontSize = 12.sp,
-                                                textAlign = TextAlign.Center,
-                                                modifier = Modifier.width(20.dp)
-                                            )
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = Color(0xFF1E3A8A),
-                                            selectedLabelColor = Color.White
-                                        )
-                                    )
-                                }
-                                // Fill remaining space if row has fewer than 7 items
-                                repeat(7 - dayRow.size) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-                            }
-                        }
-                    }
-
-                    // Show calculated renewal date
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF1E3A8A).copy(alpha = 0.1f)
-                        )
-                    ) {
-                        Row(
+                        OutlinedTextField(
+                            value = selectedDay.toString(),
+                            onValueChange = { },
+                            readOnly = true,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .menuAnchor(),
+                            label = {
+                                Text(
+                                    text = "Day of Month",
+                                    fontSize = 14.sp
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.CalendarToday,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1E3A8A),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = expanded
+                                )
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF1E3A8A),
+                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                focusedLabelColor = Color(0xFF1E3A8A)
+                            )
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
                         ) {
-                            Icon(
-                                Icons.Default.CalendarToday,
-                                contentDescription = null,
-                                tint = Color(0xFF1E3A8A),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Budget will renew on: ${
-                                    LocalDate.parse(renewalDate)
-                                        .format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
-                                }",
-                                fontSize = 12.sp,
-                                color = Color(0xFF1E3A8A),
-                                fontWeight = FontWeight.Medium
-                            )
+                            (1..31).forEach { day ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = day.toString(),
+                                            fontSize = 14.sp
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedDay = day
+                                        expanded = false
+                                    },
+                                    colors = MenuDefaults.itemColors(
+                                        textColor = if (selectedDay == day)
+                                            Color(0xFF1E3A8A) else Color.Black
+                                    )
+                                )
+                            }
                         }
                     }
                 }
