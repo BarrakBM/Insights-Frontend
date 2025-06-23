@@ -50,6 +50,7 @@ fun HomeScreen(navController: NavController) {
     val totalBalance = accountsVM.totalBalance.value?.totalBalance ?: BigDecimal.ZERO
 
     LaunchedEffect(Unit) {
+        accountsVM.fetchUserAccounts()
         accountsVM.fetchTotalBalance()
         txVM.fetchUserTransactions()
     }
