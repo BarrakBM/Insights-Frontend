@@ -20,6 +20,13 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.AllTransactions.route) {
             AllTransactionsScreen(navController)
         }
+        composable(Screen.AccountTransactions.route) { backStackEntry ->
+            val accountId = backStackEntry.arguments?.getString("accountId")?.toLongOrNull()
+            accountId?.let {
+                // Use the existing AllTransactionsScreen but pass the accountId
+                AllTransactionsScreen(navController, it)
+            }
+        }
         composable(Screen.Insights.route) {
             InsightsScreen(navController)
         }
