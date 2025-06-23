@@ -31,15 +31,29 @@ import kotlin.math.abs
 @SuppressLint("DefaultLocale")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AllTransactionsScreen(navController: NavController) {
+fun AllTransactionsScreen(
+    navController: NavController,
+    accountId: Long? = null // Add optional accountId parameter
+) {
     val context = LocalContext.current
     val transactionsViewModel: TransactionsViewModel =
         viewModel(factory = remember { AppInitializer.provideTransactionsViewModelFactory(context) })
 
-    LaunchedEffect(Unit) {
-        transactionsViewModel.fetchUserTransactions()
+    // Fetch transactions based on whether accountId is provided
+    LaunchedEffect(accountId) {
+        if (accountId != null) {
+            transactionsViewModel.fetchAccountTransactions(accountId)
+        } else { // other wise fetch whole user transaction
+            transactionsViewModel.fetchUserTransactions()
+        }
     }
-    val allTransactions by transactionsViewModel.userTransactions
+
+    // Get transactions based on whether accountId is provided
+    val allTransactions = if (accountId != null) {
+        transactionsViewModel.accountTransactions.value
+    } else {
+        transactionsViewModel.userTransactions.value
+    }
 
     var searchQuery by remember { mutableStateOf("") }
     val sortOptions = listOf(
@@ -75,7 +89,7 @@ fun AllTransactionsScreen(navController: NavController) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "All Transactions",
+                        text = if (accountId != null) "Account Transactions" else "All Transactions",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -98,7 +112,6 @@ fun AllTransactionsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(BackgroundLight)
-                //.background(Color(0xFFF5F5F5))
                 .padding(paddingValues),
             contentPadding = PaddingValues(
                 vertical = 16.dp,

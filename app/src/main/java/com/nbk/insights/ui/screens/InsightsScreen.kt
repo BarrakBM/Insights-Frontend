@@ -84,9 +84,9 @@ fun InsightsScreen(navController: NavController) {
                         accountsVM.setSelectedAccount(account)
                         navController.navigate("card_insights/${account.accountId}")
                     },
-                    onViewTransactions = {
-                        accountsVM.setSelectedAccount(account)
-                        navController.navigate("all_transactions")
+                    onViewTransactions = { accountId ->
+                        // Now properly navigates to account-specific transactions
+                        navController.navigate(Screen.AccountTransactions.createRoute(accountId))
                     },
                     onSetBudget = {
                         accountsVM.setSelectedAccount(account)

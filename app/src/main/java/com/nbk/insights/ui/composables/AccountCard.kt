@@ -1,7 +1,5 @@
 package com.nbk.insights.ui.composables
 
-
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,7 +24,7 @@ import java.text.DecimalFormat
 fun AccountCard(
     account: Account,
     onViewInsights: () -> Unit,
-    onViewTransactions: () -> Unit,
+    onViewTransactions: (Long) -> Unit, // Changed to accept accountId
     onSetBudget: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -86,7 +84,7 @@ fun AccountCard(
                             color = Color(0xFF212121)
                         )
                         Text(
-                            text = "•••• ${account.accountNumber.takeLast(4)}",
+                            text = "•••• ${account.cardNumber.takeLast(4)}",
                             fontSize = 13.sp,
                             color = Color(0xFF757575)
                         )
@@ -117,7 +115,7 @@ fun AccountCard(
                 ActionPill(
                     text = "Transactions",
                     icon = Icons.Default.List,
-                    onClick = onViewTransactions,
+                    onClick = { onViewTransactions(account.accountId) }, // Pass accountId
                     modifier = Modifier.weight(1f)
                 )
 
@@ -189,7 +187,7 @@ fun AccountCardPreview() {
     AccountCard(
         account = sampleAccount,
         onViewInsights = {},
-        onViewTransactions = {},
+        onViewTransactions = { accountId -> /* Handle navigation */ },
         onSetBudget = {}
     )
 }
