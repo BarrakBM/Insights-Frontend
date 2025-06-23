@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -26,8 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nbk.insights.data.dtos.Category
 import com.nbk.insights.ui.theme.InsightsTheme
+import com.nbk.insights.utils.AppInitializer
+import com.nbk.insights.viewmodels.AccountsViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -332,7 +336,10 @@ fun BudgetLimitDialog(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Budget will renew on: ${LocalDate.parse(renewalDate).format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}",
+                                text = "Budget will renew on: ${
+                                    LocalDate.parse(renewalDate)
+                                        .format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                                }",
                                 fontSize = 12.sp,
                                 color = Color(0xFF1E3A8A),
                                 fontWeight = FontWeight.Medium
