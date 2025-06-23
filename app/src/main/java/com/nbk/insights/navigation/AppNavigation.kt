@@ -17,6 +17,9 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.Home.route) {
             HomeScreen(navController)
         }
+        composable(Screen.Home2.route) {
+            HomeScreen2(navController)
+        }
         composable(Screen.AllTransactions.route) {
             AllTransactionsScreen(navController)
         }
@@ -29,6 +32,9 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable(Screen.Insights.route) {
             InsightsScreen(navController)
+        }
+        composable(Screen.Insights2.route) {
+            InsightsScreen2(navController)
         }
         composable(Screen.Notifications.route) {
             NotificationScreen(navController)

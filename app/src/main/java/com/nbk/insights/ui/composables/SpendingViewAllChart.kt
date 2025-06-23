@@ -39,7 +39,7 @@ fun SpendingViewAllChart(modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Overall Spending", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = NBKBlue)
+                Text("Spending Overview", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = NBKBlue)
                 Text("May 2023", fontSize = 14.sp, color = Color.Gray)
             }
 
