@@ -4,6 +4,7 @@ package com.nbk.insights.network
 import com.nbk.insights.data.dtos.AccountsResponse
 import com.nbk.insights.data.dtos.BudgetAdherenceResponse
 import com.nbk.insights.data.dtos.LimitsRequest
+import com.nbk.insights.data.dtos.SpendingTrendResponse
 import com.nbk.insights.data.dtos.TotalBalanceResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -29,6 +30,6 @@ interface AccountsApiService {
     suspend fun getBudgetAdherence(): Response<BudgetAdherenceResponse>
 
     @GET("accounts/adherence/trends")
-    suspend fun getSpendingTrends(): Response<List<Map<String, Any>>>
+    suspend fun getSpendingTrends(): Response<List<SpendingTrendResponse>>
 
 }
