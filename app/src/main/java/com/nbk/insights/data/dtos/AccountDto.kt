@@ -4,7 +4,7 @@ import java.math.BigDecimal
 
 
 data class AccountsResponse(
-    val Accounts: List<Account?>
+    val accounts: List<Account?>
 )
 
 data class Account(
