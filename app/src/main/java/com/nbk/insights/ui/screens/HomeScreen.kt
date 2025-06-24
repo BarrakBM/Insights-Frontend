@@ -55,7 +55,11 @@ fun HomeScreen(navController: NavController) {
    // var refreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {}
+    LaunchedEffect(Unit) {
+        accountsVM.fetchUserAccounts()
+        accountsVM.fetchTotalBalance()
+        txVM.fetchUserTransactions()
+    }
 
     /* ── ui ──────────────────────────────────────── */
     Scaffold(
