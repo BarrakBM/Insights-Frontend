@@ -8,6 +8,7 @@ import com.nbk.insights.data.dtos.TransactionResponse
 import com.nbk.insights.data.dtos.RecurringPaymentResponse
 import com.nbk.insights.data.repository.TransactionsRepository
 import com.nbk.insights.network.TransactionApiService
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class TransactionsViewModel(
@@ -26,21 +27,27 @@ class TransactionsViewModel(
     private val _recurringPayments = mutableStateOf<List<RecurringPaymentResponse>?>(null)
     val recurringPayments: State<List<RecurringPaymentResponse>?> get() = _recurringPayments
 
+    private val _isRefreshing = mutableStateOf(false)
+    val isRefreshing: State<Boolean> get() = _isRefreshing
+
     fun fetchUserTransactions(forceRefresh: Boolean = false) {
         viewModelScope.launch {
+            _isRefreshing.value = true        // start spinner
+            delay(800)
             setLoading(true)
             try {
                 transactionsRepository.getUserTransactions(forceRefresh)
-                    .onSuccess { transactionList ->
-                        _userTransactions.value = transactionList as List<TransactionResponse>?
-                        Log.i(TAG, "Fetched user transactions successfully - ${transactionList.size} transactions.")
+                    .onSuccess { txList ->
+                        _userTransactions.value = txList as? List<TransactionResponse>
+                        Log.i(TAG, "Fetched ${txList} user transactions.")
                     }
-                    .onFailure { exception ->
-                        val error = exception.message ?: "Unknown error occurred"
-                        Log.e(TAG, "Failed to fetch user transactions: $error", exception)
-                        setError(error)
+                    .onFailure { ex ->
+                        val err = ex.message ?: "Unknown error"
+                        Log.e(TAG, "Fetch failed: $err", ex)
+                        setError(err)
                     }
             } finally {
+                _isRefreshing.value = false   // stop spinner
                 setLoading(false)
             }
         }

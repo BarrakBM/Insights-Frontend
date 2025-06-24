@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,28 +28,32 @@ import com.nbk.insights.ui.composables.*
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.*
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-
     /* ── view-models ─────────────────────────────── */
     val ctx = LocalContext.current
-    val authVM: AuthViewModel         = viewModel(factory = remember { AppInitializer.provideAuthViewModelFactory(ctx) })
+    val authVM: AuthViewModel = viewModel(factory = remember { AppInitializer.provideAuthViewModelFactory(ctx) })
     val accountsVM: AccountsViewModel = viewModel(factory = remember { AppInitializer.provideAccountsViewModelFactory(ctx) })
-    val txVM: TransactionsViewModel   = viewModel(factory = remember { AppInitializer.provideTransactionsViewModelFactory(ctx) })
+    val txVM: TransactionsViewModel = viewModel(factory = remember { AppInitializer.provideTransactionsViewModelFactory(ctx) })
 
     /* ── state ───────────────────────────────────── */
-    val bankCards          = remember { getBankCards() }
-    val recentTxs          by txVM.userTransactions
-    val totalTx            = recentTxs?.size ?: 0
+    val bankCards = remember { getBankCards() }
+    val recentTxs by txVM.userTransactions
+    val totalTx = recentTxs?.size ?: 0
+    var shownCount by remember { mutableStateOf(4) } // how many tx currently shown
 
-    var shownCount by remember { mutableStateOf(4) }     // how many tx currently shown
-
-    val firstName    = authVM.user.value?.fullName?.split(" ")?.firstOrNull() ?: "Guest"
+    val firstName = authVM.user.value?.fullName?.split(" ")?.firstOrNull() ?: "Guest"
     val totalBalance = accountsVM.totalBalance.value?.totalBalance ?: BigDecimal.ZERO
+
+    /* ── refresh state ───────────────────────────── */
+    val pullState = rememberPullToRefreshState()
+   // var refreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         accountsVM.fetchUserAccounts()
@@ -62,7 +68,7 @@ fun HomeScreen(navController: NavController) {
                 title = {
                     Column {
                         Text("Hello, $firstName", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text("Welcome back!",      fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
+                        Text("Welcome back!", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
                     }
                 },
                 actions = {
@@ -75,101 +81,111 @@ fun HomeScreen(navController: NavController) {
         },
         bottomBar = { BottomNavigationBar(selectedTab = "Home", navController = navController) }
     ) { paddingValues ->
-
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-        val visibleTx   = recentTxs.orEmpty().take(shownCount)
+        val visibleTx = recentTxs.orEmpty().take(shownCount)
 
-        LazyColumn(
+        PullToRefreshBox(
+            state = pullState,
+            isRefreshing = txVM.isRefreshing.value,
+            onRefresh = {
+                txVM.fetchUserTransactions(forceRefresh = true)
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .background(BackgroundLight)
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-
-            /* 1 – total balance */
-            item { TotalBalanceCard(balance = "KD $totalBalance", lastUpdated = "Today, 10:45 AM") }
-
-            /* 2 – spending chart */
-            item { SpendingViewAllChart() }
-
-            /* 3 – cards header */
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                .padding(paddingValues), // Apply padding from Scaffold
+            content = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(BackgroundLight)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
-                    Text("My Cards", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    TextButton(onClick = { /* TODO */ }) { Text("View All Cards", color = NBKBlue) }
-                }
-            }
+                    /* 1 – total balance */
+                    item { TotalBalanceCard(balance = "KD $totalBalance", lastUpdated = "Today, 10:45 AM") }
 
-            /* 4 – cards carousel (first 2) */
-            item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding        = PaddingValues(start = 4.dp, end = 4.dp)
-                ) {
-                    items(bankCards.take(2)) { card ->
-                        Box(Modifier.width(screenWidth * 0.85f)) { CardItem(card) }
-                    }
-                }
-            }
+                    /* 2 – spending chart */
+                    item { SpendingViewAllChart() }
 
-            /* 5 – recent tx header */
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Recent Transactions", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    TextButton(onClick = { navController.navigate(Screen.AllTransactions.route) }) {
-                        Text("View All", color = NBKBlue)
-                    }
-                }
-            }
-
-            /* 6 – visible transactions */
-            items(visibleTx) { tx -> TransactionItem(transaction = tx) }
-
-            /* 7 – load-more / show-less controls                      */
-            if (totalTx > 4) {
-                item {
-                    val showMore = shownCount < totalTx
-                    val showLess = shownCount > 4
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        if (showLess) {
-                            Text(
-                                text       = "Show Less",
-                                fontWeight = FontWeight.Medium,
-                                color      = PurpleGrey40,
-                                modifier = Modifier.clickable { shownCount = 4 }
-                            )
+                    /* 3 – cards header */
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("My Cards", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            TextButton(onClick = { /* TODO */ }) { Text("View All Cards", color = NBKBlue) }
                         }
+                    }
 
-                        if (showLess && showMore) Spacer(Modifier.width(24.dp))  // wider gap
+                    /* 4 – cards carousel (first 2) */
+                    item {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(start = 4.dp, end = 4.dp)
+                        ) {
+                            items(bankCards.take(2)) { card ->
+                                Box(Modifier.width(screenWidth * 0.85f)) { CardItem(card) }
+                            }
+                        }
+                    }
 
-                        if (showMore) {
-                            Text(
-                                text       = "Show More",
-                                fontWeight = FontWeight.Medium,
-                                color      = NBKBlue,
-                                modifier   = Modifier.clickable {
-                                    shownCount = min(shownCount + 4, totalTx)
+                    /* 5 – recent tx header */
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Recent Transactions", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            TextButton(onClick = { navController.navigate(Screen.AllTransactions.route) }) {
+                                Text("View All", color = NBKBlue)
+                            }
+                        }
+                    }
+
+                    /* 6 – visible transactions */
+                    items(visibleTx) { tx -> TransactionItem(transaction = tx) }
+
+                    /* 7 – load-more / show-less controls */
+                    if (totalTx > 4) {
+                        item {
+                            val showMore = shownCount < totalTx
+                            val showLess = shownCount > 4
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                if (showLess) {
+                                    Text(
+                                        text = "Show Less",
+                                        fontWeight = FontWeight.Medium,
+                                        color = PurpleGrey40,
+                                        modifier = Modifier.clickable { shownCount = 4 }
+                                    )
                                 }
-                            )
+
+                                if (showLess && showMore) Spacer(Modifier.width(24.dp)) // wider gap
+
+                                if (showMore) {
+                                    Text(
+                                        text = "Show More",
+                                        fontWeight = FontWeight.Medium,
+                                        color = NBKBlue,
+                                        modifier = Modifier.clickable {
+                                            shownCount = min(shownCount + 4, totalTx)
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
+        )
     }
 }
