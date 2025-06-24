@@ -1,12 +1,10 @@
 // HomeScreen.kt
 package com.nbk.insights.ui.screens
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,10 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -29,9 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.nbk.insights.data.dtos.TransactionResponse
-import com.nbk.insights.data.tempfunctions.getBankCards
 import com.nbk.insights.navigation.Screen
 import com.nbk.insights.ui.composables.BalanceCard
 import com.nbk.insights.ui.composables.BottomNavigationBar
@@ -45,8 +39,6 @@ import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.AuthViewModel
 import com.nbk.insights.viewmodels.TransactionsViewModel
 import java.math.BigDecimal
-import java.text.NumberFormat
-import java.util.*
 import kotlin.math.min
 
 // Color definitions
@@ -159,14 +151,6 @@ fun AppHeader() {
                     contentDescription = "Notifications",
                     tint = TextSecondary
                 )
-//                AsyncImage(
-//                    model = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg",
-//                    contentDescription = "Profile",
-//                    modifier = Modifier
-//                        .size(32.dp)
-//                        .clip(CircleShape),
-//                    contentScale = ContentScale.Crop
-//                )
             }
         }
     }
