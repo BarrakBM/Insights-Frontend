@@ -63,6 +63,9 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom.v20240401))
     //implementation(libs.material.pull.refresh)
     //implementation (libs.material3)
+    implementation(platform("androidx.compose:compose-bom:2024.02.00"))  // 1.6.x APIs
+    implementation("androidx.compose.animation:animation")
+    implementation (libs.accompanist.navigation.animation)
     implementation(libs.androidx.material3.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

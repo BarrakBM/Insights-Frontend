@@ -26,8 +26,8 @@ fun BottomNavigationBar(
     navController: NavController
 ) {
     val items = listOf(
-        BottomNavBarDTO("Home", Icons.Default.Home, "home"),
-        BottomNavBarDTO("Insights", Icons.Default.PieChart, "insights"),
+        BottomNavBarDTO("Home", Icons.Default.Home, "home2"),
+        BottomNavBarDTO("Insights", Icons.Default.PieChart, "insights2"),
         BottomNavBarDTO("Recurring", Icons.Default.Refresh, "recurring_payments"),
     )
 
