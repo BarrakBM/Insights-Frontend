@@ -8,6 +8,7 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.nbk.insights.data.tempfunctions.getBankCards
+import com.nbk.insights.ui.MainLayout
 import com.nbk.insights.ui.composables.CardInsightContent
 import com.nbk.insights.ui.screens.*
 
@@ -99,8 +100,9 @@ fun AppNavigation(navController: NavHostController) {
 
         /* ─── Remaining screens inherit global cross-fade ─── */
         composable(Screen.Home2.route) {
-            HomeScreen2(navController)
-            currentRoute = Screen.Home2.route
+            MainLayout(selectedTab = "Home", navController = navController) { padding ->
+                HomeScreen2(navController = navController, paddingValues = padding)
+            }
         }
 
         composable(Screen.AllTransactions.route) {
@@ -114,7 +116,14 @@ fun AppNavigation(navController: NavHostController) {
             }
             currentRoute = Screen.AccountTransactions.route
         }
-
+        composable(Screen.Insights.route) {
+            InsightsScreen(navController)
+        }
+        composable(Screen.Insights2.route) {
+            MainLayout(selectedTab = "Insights", navController = navController) { padding ->
+                InsightsScreen2(navController = navController, paddingValues = padding)
+            }
+        }
         composable(Screen.Notifications.route) {
             NotificationScreen(navController)
             currentRoute = Screen.Notifications.route
