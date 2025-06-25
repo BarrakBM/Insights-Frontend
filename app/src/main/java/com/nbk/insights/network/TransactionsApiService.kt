@@ -1,6 +1,6 @@
 package com.nbk.insights.network
-import com.nbk.insights.data.dtos.RecurringPaymentResponse
-import com.nbk.insights.data.dtos.TransactionResponse
+
+import com.nbk.insights.data.dtos.*
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -25,5 +25,11 @@ interface TransactionApiService {
     suspend fun detectRecurringPaymentsForAccount(
         @Path("accountId") accountId: Long
     ): Response<List<RecurringPaymentResponse>>
+
+    @GET("retrieve/cash-flow/last/month")
+    suspend fun retrieveLastMonth(): Response<CashFlowCategorizedResponse>
+
+    @GET("retrieve/cash-flow/this/month")
+    suspend fun retrieveThisMonth(): Response<CashFlowCategorizedResponse>
 
 }

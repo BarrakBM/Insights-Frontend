@@ -1,16 +1,20 @@
 package com.nbk.insights.ui.composables
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.nbk.insights.ui.screens.TextPrimary
-import com.nbk.insights.ui.screens.TextSecondary
+import com.nbk.insights.ui.theme.TextPrimary
+import com.nbk.insights.ui.theme.TextSecondary
+
 
 @Composable
 fun GreetingSection(firstName: String) {
-    Column {
+    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
             "Hello, $firstName",
             fontSize = 24.sp,

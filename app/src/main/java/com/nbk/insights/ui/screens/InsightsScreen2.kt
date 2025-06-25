@@ -60,33 +60,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
+import com.nbk.insights.ui.composables.AppHeader
 import com.nbk.insights.ui.composables.BottomNavigationBar
+import com.nbk.insights.ui.theme.*
 
 @Composable
-fun InsightsScreen2(
-    navController: NavController
-) {
-    Scaffold(
-        topBar = { AppHeader() },
-        bottomBar = { BottomNavigationBar(selectedTab = "Insights2", navController = navController) },
-        containerColor = LightBg
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item { AccountCard() }
-            item { MoneyFlowSection() }
-            item { FinancialInsights() }
-            item { BudgetProgress() }
-            item { SmartRecommendations() }
-            item { RecurringTransactions() }
-        }
+fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        item { AccountCard() }
+        item { MoneyFlowSection() }
+        item { FinancialInsights() }
+        item { BudgetProgress() }
+        item { SmartRecommendations() }
+        item { RecurringTransactions() }
     }
-}
+    }
 
 @Composable
 fun AccountCard() {

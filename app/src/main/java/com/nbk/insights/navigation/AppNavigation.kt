@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.nbk.insights.data.tempfunctions.getBankCards
+import com.nbk.insights.ui.MainLayout
 import com.nbk.insights.ui.composables.CardInsightContent
 import com.nbk.insights.ui.screens.*
 
@@ -18,7 +19,9 @@ fun AppNavigation(navController: NavHostController) {
             HomeScreen(navController)
         }
         composable(Screen.Home2.route) {
-            HomeScreen2(navController)
+            MainLayout(selectedTab = "Home", navController = navController) { padding ->
+                HomeScreen2(navController = navController, paddingValues = padding)
+            }
         }
         composable(Screen.AllTransactions.route) {
             AllTransactionsScreen(navController)
@@ -34,7 +37,9 @@ fun AppNavigation(navController: NavHostController) {
             InsightsScreen(navController)
         }
         composable(Screen.Insights2.route) {
-            InsightsScreen2(navController)
+            MainLayout(selectedTab = "Insights", navController = navController) { padding ->
+                InsightsScreen2(navController = navController, paddingValues = padding)
+            }
         }
         composable(Screen.Notifications.route) {
             NotificationScreen(navController)

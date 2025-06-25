@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import com.nbk.insights.data.dtos.CashFlowCategorizedResponse
 import com.nbk.insights.data.dtos.TransactionResponse
 import com.nbk.insights.data.dtos.RecurringPaymentResponse
 import com.nbk.insights.data.repository.TransactionsRepository
@@ -24,6 +25,14 @@ class TransactionsViewModel(
     private val _accountTransactions = mutableStateOf<List<TransactionResponse>?>(null)
     val accountTransactions: State<List<TransactionResponse>?> get() = _accountTransactions
 
+    // Changed from List to single object
+    private val _lastMonth = mutableStateOf<CashFlowCategorizedResponse?>(null)
+    val lastMonth: State<CashFlowCategorizedResponse?> get() = _lastMonth
+
+    // Changed from List to single object
+    private val _thisMonth = mutableStateOf<CashFlowCategorizedResponse?>(null)
+    val thisMonth: State<CashFlowCategorizedResponse?> get() = _thisMonth
+
     private val _recurringPayments = mutableStateOf<List<RecurringPaymentResponse>?>(null)
     val recurringPayments: State<List<RecurringPaymentResponse>?> get() = _recurringPayments
 
@@ -39,7 +48,7 @@ class TransactionsViewModel(
                 transactionsRepository.getUserTransactions(forceRefresh)
                     .onSuccess { txList ->
                         _userTransactions.value = txList as? List<TransactionResponse>
-                        Log.i(TAG, "Fetched ${txList} user transactions.")
+                        Log.i(TAG, "Fetched $txList user transactions.")
                     }
                     .onFailure { ex ->
                         val err = ex.message ?: "Unknown error"
@@ -113,6 +122,56 @@ class TransactionsViewModel(
         }
     }
 
+    fun fetchLastMonth(){
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val response = transactionApiService.retrieveLastMonth()
+                if(response.isSuccessful){
+                    _lastMonth.value = response.body()
+                    Log.i(TAG, "Fetched last month successfully")
+                }
+                else{
+                    val error = "Failed to fetch last month: ${response.message()}"
+                    Log.w(TAG, error)
+                    setError(error)
+                }
+            }
+            catch (e: Exception) {
+                val error = "Exception fetching last month: ${e.message}"
+                Log.e(TAG, error, e)
+                setError(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
+    fun fetchThisMonth(){
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val response = transactionApiService.retrieveThisMonth()
+                if(response.isSuccessful){
+                    _thisMonth.value = response.body()
+                    Log.i(TAG, "Fetched this month successfully")
+                }
+                else{
+                    val error = "Failed to fetch this month: ${response.message()}"
+                    Log.w(TAG, error)
+                    setError(error)
+                }
+            }
+            catch (e: Exception) {
+                val error = "Exception fetching this month: ${e.message}"
+                Log.e(TAG, error, e)
+                setError(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
     fun refreshUserTransactions() {
         fetchUserTransactions(forceRefresh = true)
     }
@@ -122,6 +181,8 @@ class TransactionsViewModel(
         _userTransactions.value = null
         _accountTransactions.value = null
         _recurringPayments.value = null
+        _lastMonth.value = null
+        _thisMonth.value = null
         Log.i(TAG, "Transactions cache cleared")
     }
 }
