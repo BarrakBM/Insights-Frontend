@@ -129,11 +129,6 @@ fun AppNavigation(navController: NavHostController) {
             currentRoute = Screen.Notifications.route
         }
 
-        composable(Screen.Insights2.route) {
-            InsightsScreen2(navController)
-            currentRoute = Screen.Insights2.route
-        }
-
         /* modal-style card insight */
         composable("card_insights/{cardId}") { backStack ->
             val id = backStack.arguments?.getString("cardId")
