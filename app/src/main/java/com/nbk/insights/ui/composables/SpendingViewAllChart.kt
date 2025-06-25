@@ -150,7 +150,7 @@ fun SpendingViewAllChart(
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Difference", fontSize = 14.sp, color = Color.Gray)
+                    Text("Net", fontSize = 14.sp, color = Color.Gray)
                     Text(
                         "KD ${currencyFormat.format(saved)}",
                         fontSize = 16.sp,
