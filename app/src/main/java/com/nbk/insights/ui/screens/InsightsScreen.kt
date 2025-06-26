@@ -1,5 +1,7 @@
 package com.nbk.insights.ui.screens
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,12 +29,20 @@ import java.time.LocalDate
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(navController: NavController) {
-    val ctx = LocalContext.current
-    val accountsVM: AccountsViewModel = viewModel(factory = remember { AppInitializer.provideAccountsViewModelFactory(ctx) })
+    // Use activity-scoped ViewModel
+    val activity = LocalActivity.current as ComponentActivity
+    val accountsVM: AccountsViewModel = viewModel(
+        viewModelStoreOwner = activity, // 👈 SHARED ACROSS ALL SCREENS
+        factory = remember { AppInitializer.provideAccountsViewModelFactory(activity) }
+    )
 
+    // Smart data fetching - only fetch if data doesn't exist
     LaunchedEffect(Unit) {
-        accountsVM.fetchUserAccounts()
+        if (accountsVM.accounts.value == null) {
+            accountsVM.fetchUserAccounts()
+        }
     }
+
     var showBudgetDialog by remember { mutableStateOf(false) }
     var budgetAccountId by remember { mutableStateOf<Long?>(null) }
 
