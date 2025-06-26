@@ -2,8 +2,6 @@ package com.nbk.insights.ui.composables
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -14,9 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.nbk.insights.data.dtos.BottomNavBarDTO
-import com.nbk.insights.ui.theme.InsightsTheme
 import com.nbk.insights.ui.theme.NBKBlue
 import com.nbk.insights.ui.theme.NBKBlueAlpha10
 

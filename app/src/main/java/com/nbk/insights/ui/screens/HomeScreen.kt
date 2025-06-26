@@ -30,7 +30,6 @@ import com.nbk.insights.ui.composables.*
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.*
-import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import kotlin.math.min
 

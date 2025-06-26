@@ -1,5 +1,6 @@
 package com.nbk.insights.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
@@ -15,15 +16,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.nbk.insights.ui.composables.BottomNavigationBar
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.TransactionsViewModel
 import com.nbk.insights.viewmodels.AccountsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("DefaultLocale")
 @Composable
-fun RecurringPaymentsScreen(navController: NavController) {
+fun RecurringPaymentsScreen(navController: NavController, paddingValues: PaddingValues) {
     // se activity-scoped ViewModels
     val activity = LocalActivity.current as ComponentActivity
     val transactionsVM: TransactionsViewModel = viewModel(
@@ -57,32 +57,19 @@ fun RecurringPaymentsScreen(navController: NavController) {
     // Get real recurring payments data
     val recurringPayments = transactionsVM.recurringPayments.value
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text("Recurring Payments", color = Color.White, fontSize = 20.sp)
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(selectedTab = "Recurring", navController = navController)
-        }
-    ) { padding ->
-        LazyColumn(
+    LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(BackgroundLight)
-                .padding(padding)
+                .padding(paddingValues)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Use real data
-            recurringPayments?.let { payments ->
-                if (payments.isEmpty()) {
+    ) {
+        // Use real data
+        recurringPayments?.let { payments ->
+            if (payments.isEmpty()) {
                     // Show empty state
-                    item {
+                item {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -164,5 +151,4 @@ fun RecurringPaymentsScreen(navController: NavController) {
                 }
             }
         }
-    }
 }
