@@ -1,10 +1,12 @@
 package com.nbk.insights.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
@@ -32,16 +34,26 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import kotlin.math.min
 
+@SuppressLint("ContextCastToActivity")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    /* ── view-models ─────────────────────────────── */
-    val ctx = LocalContext.current
-    val authVM: AuthViewModel = viewModel(factory = remember { AppInitializer.provideAuthViewModelFactory(ctx) })
-    val accountsVM: AccountsViewModel = viewModel(factory = remember { AppInitializer.provideAccountsViewModelFactory(ctx) })
-    val txVM: TransactionsViewModel = viewModel(factory = remember { AppInitializer.provideTransactionsViewModelFactory(ctx) })
+    // ✅ Use activity scope for ALL ViewModels
+    val activity = LocalContext.current as ComponentActivity
+    val authVM: AuthViewModel = viewModel(
+        viewModelStoreOwner = activity, // 👈 KEY CHANGE
+        factory = remember { AppInitializer.provideAuthViewModelFactory(activity) }
+    )
+    val accountsVM: AccountsViewModel = viewModel(
+        viewModelStoreOwner = activity, // 👈 KEY CHANGE
+        factory = remember { AppInitializer.provideAccountsViewModelFactory(activity) }
+    )
+    val txVM: TransactionsViewModel = viewModel(
+        viewModelStoreOwner = activity, // 👈 KEY CHANGE
+        factory = remember { AppInitializer.provideTransactionsViewModelFactory(activity) }
+    )
 
-    /* ── state ───────────────────────────────────── */
+    /* ── state variables that were missing ───────────────────────────────── */
     val bankCards = remember { getBankCards() }
     val recentTxs by txVM.userTransactions
     val totalTx = recentTxs?.size ?: 0
@@ -50,15 +62,21 @@ fun HomeScreen(navController: NavController) {
     val firstName = authVM.user.value?.fullName?.split(" ")?.firstOrNull() ?: "Guest"
     val totalBalance = accountsVM.totalBalance.value?.totalBalance ?: BigDecimal.ZERO
 
-    /* ── refresh state ───────────────────────────── */
+    /* ── refresh state ───────────────────────────────────── */
     val pullState = rememberPullToRefreshState()
-   // var refreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    // ✅ Only fetch if data doesn't exist
     LaunchedEffect(Unit) {
-        accountsVM.fetchUserAccounts()
-        accountsVM.fetchTotalBalance()
-        txVM.fetchUserTransactions()
+        if (accountsVM.accounts.value == null) {
+            accountsVM.fetchUserAccounts()
+        }
+        if (accountsVM.totalBalance.value == null) {
+            accountsVM.fetchTotalBalance()
+        }
+        if (txVM.userTransactions.value == null) {
+            txVM.fetchUserTransactions()
+        }
     }
 
     /* ── ui ──────────────────────────────────────── */
