@@ -1,7 +1,7 @@
 package com.nbk.insights.ui.screens
 
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity // 👈 NEW IMPORT
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.*
@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.nbk.insights.data.dtos.CashFlowCategorizedResponse
 import com.nbk.insights.ui.composables.BalanceCard
 import com.nbk.insights.ui.composables.GreetingSection
 import com.nbk.insights.ui.composables.QuickInsights
@@ -26,17 +25,17 @@ import java.math.BigDecimal
 @Composable
 fun HomeScreen2(navController: NavController, paddingValues: PaddingValues) {
     /* ── view-models with ACTIVITY SCOPE ─────────────────────────────── */
-    val activity = LocalActivity.current as ComponentActivity // Cast to ComponentActivity
+    val activity = LocalActivity.current as ComponentActivity
     val authVM: AuthViewModel = viewModel(
-        viewModelStoreOwner = activity, // Activity scope
+        viewModelStoreOwner = activity,
         factory = remember { AppInitializer.provideAuthViewModelFactory(activity) }
     )
     val accountsVM: AccountsViewModel = viewModel(
-        viewModelStoreOwner = activity, // Activity scope
+        viewModelStoreOwner = activity,
         factory = remember { AppInitializer.provideAccountsViewModelFactory(activity) }
     )
     val txVM: TransactionsViewModel = viewModel(
-        viewModelStoreOwner = activity, // Activity scope
+        viewModelStoreOwner = activity,
         factory = remember { AppInitializer.provideTransactionsViewModelFactory(activity) }
     )
 
