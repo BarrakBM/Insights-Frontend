@@ -140,5 +140,8 @@ fun AppNavigation(navController: NavHostController) {
             }
             currentRoute = "card_insights/{cardId}"
         }
+        composable(Screen.BudgetManagement.route) {
+            BudgetManagementScreen(navController)
+        }
     }
 }
