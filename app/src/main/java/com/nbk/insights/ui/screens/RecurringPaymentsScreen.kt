@@ -12,7 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,7 +25,7 @@ import com.nbk.insights.viewmodels.AccountsViewModel
 @SuppressLint("DefaultLocale")
 @Composable
 fun RecurringPaymentsScreen(navController: NavController, paddingValues: PaddingValues) {
-    // se activity-scoped ViewModels
+    // Use activity-scoped ViewModels
     val activity = LocalActivity.current as ComponentActivity
     val transactionsVM: TransactionsViewModel = viewModel(
         viewModelStoreOwner = activity, // 👈 SHARED ACROSS ALL SCREENS
@@ -35,24 +35,6 @@ fun RecurringPaymentsScreen(navController: NavController, paddingValues: Padding
         viewModelStoreOwner = activity, // 👈 SHARED ACROSS ALL SCREENS
         factory = remember { AppInitializer.provideAccountsViewModelFactory(activity) }
     )
-    val accountsVM: AccountsViewModel = viewModel(
-        factory = remember { AppInitializer.provideAccountsViewModelFactory(ctx) }
-    )
-
-    LaunchedEffect(Unit) {
-        accountsVM.fetchUserAccounts()
-    }
-
-    val accounts = accountsVM.accounts.value?.accounts
-    val firstAccountId = accounts?.firstOrNull()?.accountId
-
-    LaunchedEffect(firstAccountId) {
-        firstAccountId?.let {
-            transactionsVM.detectRecurringPayments(it)
-        }
-    }
-
-    val recurringPayments = transactionsVM.recurringPayments.value
 
     // Smart data fetching - only fetch if data doesn't exist
     LaunchedEffect(Unit) {
@@ -75,79 +57,19 @@ fun RecurringPaymentsScreen(navController: NavController, paddingValues: Padding
 
     // Get real recurring payments data
     val recurringPayments = transactionsVM.recurringPayments.value
+    val isLoading = transactionsVM.isLoading.value
 
     LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BackgroundLight)
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundLight)
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Use real data
-        recurringPayments?.let { payments ->
-            if (payments.isEmpty()) {
-                    // Show empty state
-                item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    "No recurring payments detected",
-                                    fontSize = 16.sp,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    "We'll analyze your transactions to find recurring patterns",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    // Show real recurring payments
-                    items(payments) { payment ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    payment.mcc.category,
-                                    fontSize = 16.sp,
-                                    color = Color.Black
-                                )
-                                Text(
-                                    "Amount: KD ${payment.latestAmount}",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    "Confidence: ${String.format("%.1f", payment.confidenceScore * 100)}%",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    "Frequency: ${payment.monthsWithPayments} months",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray
-                                )
-                            }
-                        }
-                    }
-                }
-            } ?: run {
-                // Show loading state
+        when {
+            // Loading state
+            isLoading || (firstAccountId != null && recurringPayments == null) -> {
                 item {
                     Box(
                         modifier = Modifier
@@ -168,13 +90,91 @@ fun RecurringPaymentsScreen(navController: NavController, paddingValues: Padding
                         }
                     }
                 }
-            } ?: item {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            }
+
+            // Empty state
+            recurringPayments?.isEmpty() == true -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                "No recurring payments detected",
+                                fontSize = 16.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                "We'll analyze your transactions to find recurring patterns",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Show recurring payments
+            recurringPayments != null -> {
+                items(recurringPayments) { payment ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                payment.mcc.category,
+                                fontSize = 16.sp,
+                                color = Color.Black
+                            )
+                            Text(
+                                "Amount: KD ${String.format("%.2f", payment.latestAmount)}",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                "Confidence: ${String.format("%.1f", payment.confidenceScore * 100)}%",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                "Frequency: ${payment.monthsWithPayments} months",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+            }
+
+            // No account available
+            else -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "No account available",
+                            fontSize = 16.sp,
+                            color = Color.Gray
+                        )
+                    }
                 }
             }
         }
+    }
 }

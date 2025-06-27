@@ -13,3 +13,9 @@ data class OfferDTO(
     val id: Long,
     val description: String
 )
+
+data class QuickInsightsDTO(
+    val spendingComparedToLastMonth: String,
+    val budgetLimitWarning: String,
+    val savingInsights: String
+)
