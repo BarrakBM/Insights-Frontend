@@ -11,6 +11,7 @@ import com.nbk.insights.data.dtos.AccountsResponse
 import com.nbk.insights.data.dtos.TotalBalanceResponse
 import com.nbk.insights.data.dtos.LimitsRequest
 import com.nbk.insights.data.dtos.BudgetAdherenceResponse
+import com.nbk.insights.data.dtos.ListOfLimitsResponse
 import com.nbk.insights.data.dtos.SpendingTrendResponse
 
 class AccountsViewModel(
@@ -33,6 +34,9 @@ class AccountsViewModel(
 
     private val _spendingTrends = mutableStateOf<List<SpendingTrendResponse>?>(null)
     val spendingTrends: State<List<SpendingTrendResponse>?> get() = _spendingTrends
+
+    private val _accountLimits = mutableStateOf<ListOfLimitsResponse?>(null)
+    val accountLimits: State<ListOfLimitsResponse?> get() = _accountLimits
 
     fun fetchUserAccounts() {
         viewModelScope.launch {
@@ -154,7 +158,28 @@ class AccountsViewModel(
             }
         }
     }
-
+    fun fetchAccountLimits(accountId: Long) {
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val response = apiService.getAccountLimits(accountId)
+                if (response.isSuccessful) {
+                    _accountLimits.value = response.body()
+                    Log.i(TAG, "Fetched account limits successfully.")
+                } else {
+                    val error = "Failed to fetch account limits: ${response.message()}"
+                    Log.w(TAG, error)
+                    setError(error)
+                }
+            } catch (e: Exception) {
+                val error = "Exception fetching account limits: ${e.message}"
+                Log.e(TAG, error, e)
+                setError(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
     fun fetchSpendingTrends() {
         viewModelScope.launch {
             setLoading(true)

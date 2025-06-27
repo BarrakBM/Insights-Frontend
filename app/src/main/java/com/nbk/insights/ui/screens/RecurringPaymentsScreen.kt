@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +35,24 @@ fun RecurringPaymentsScreen(navController: NavController, paddingValues: Padding
         viewModelStoreOwner = activity, // 👈 SHARED ACROSS ALL SCREENS
         factory = remember { AppInitializer.provideAccountsViewModelFactory(activity) }
     )
+    val accountsVM: AccountsViewModel = viewModel(
+        factory = remember { AppInitializer.provideAccountsViewModelFactory(ctx) }
+    )
+
+    LaunchedEffect(Unit) {
+        accountsVM.fetchUserAccounts()
+    }
+
+    val accounts = accountsVM.accounts.value?.accounts
+    val firstAccountId = accounts?.firstOrNull()?.accountId
+
+    LaunchedEffect(firstAccountId) {
+        firstAccountId?.let {
+            transactionsVM.detectRecurringPayments(it)
+        }
+    }
+
+    val recurringPayments = transactionsVM.recurringPayments.value
 
     // Smart data fetching - only fetch if data doesn't exist
     LaunchedEffect(Unit) {
@@ -148,6 +167,13 @@ fun RecurringPaymentsScreen(navController: NavController, paddingValues: Padding
                             )
                         }
                     }
+                }
+            } ?: item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
         }

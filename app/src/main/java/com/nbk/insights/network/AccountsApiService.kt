@@ -4,6 +4,7 @@ package com.nbk.insights.network
 import com.nbk.insights.data.dtos.AccountsResponse
 import com.nbk.insights.data.dtos.BudgetAdherenceResponse
 import com.nbk.insights.data.dtos.LimitsRequest
+import com.nbk.insights.data.dtos.ListOfLimitsResponse
 import com.nbk.insights.data.dtos.SpendingTrendResponse
 import com.nbk.insights.data.dtos.TotalBalanceResponse
 import retrofit2.Response
@@ -19,6 +20,9 @@ interface AccountsApiService {
 
     @GET("accounts/total-balance")
     suspend fun retrieveTotalBalance(): Response<TotalBalanceResponse>
+
+    @GET("accounts/limits/{accountId}")
+    suspend fun getAccountLimits(@Path("accountId") accountId: Long): Response<ListOfLimitsResponse>
 
     @POST("accounts/limit")
     suspend fun setAccountLimit(@Body request: LimitsRequest): Response<Map<String, String>>
