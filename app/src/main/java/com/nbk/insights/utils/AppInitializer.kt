@@ -17,7 +17,7 @@ import retrofit2.Retrofit
 
 object AppInitializer {
 
-    fun provideTokenManager(context: Context): TokenManager {
+    private fun provideTokenManager(context: Context): TokenManager {
         return TokenManager.create(context)
     }
 

@@ -1,5 +1,8 @@
 package com.nbk.insights.ui.screens
 
+import android.annotation.SuppressLint
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,19 +17,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.nbk.insights.ui.composables.BottomNavigationBar
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.TransactionsViewModel
 import com.nbk.insights.viewmodels.AccountsViewModel
 
-
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("DefaultLocale")
 @Composable
-fun RecurringPaymentsScreen(navController: NavController) {
-    val ctx = LocalContext.current
+fun RecurringPaymentsScreen(navController: NavController, paddingValues: PaddingValues) {
+    // se activity-scoped ViewModels
+    val activity = LocalActivity.current as ComponentActivity
     val transactionsVM: TransactionsViewModel = viewModel(
-        factory = remember { AppInitializer.provideTransactionsViewModelFactory(ctx) }
+        viewModelStoreOwner = activity, // 👈 SHARED ACROSS ALL SCREENS
+        factory = remember { AppInitializer.provideTransactionsViewModelFactory(activity) }
+    )
+    val accountsVM: AccountsViewModel = viewModel(
+        viewModelStoreOwner = activity, // 👈 SHARED ACROSS ALL SCREENS
+        factory = remember { AppInitializer.provideAccountsViewModelFactory(activity) }
     )
     val accountsVM: AccountsViewModel = viewModel(
         factory = remember { AppInitializer.provideAccountsViewModelFactory(ctx) }
@@ -47,39 +54,117 @@ fun RecurringPaymentsScreen(navController: NavController) {
 
     val recurringPayments = transactionsVM.recurringPayments.value
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text("Recurring Payments", color = Color.White, fontSize = 20.sp)
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(selectedTab = "Recurring", navController = navController)
+    // Smart data fetching - only fetch if data doesn't exist
+    LaunchedEffect(Unit) {
+        if (accountsVM.accounts.value == null) {
+            accountsVM.fetchUserAccounts()
         }
-    ) { padding ->
-        LazyColumn(
+    }
+
+    val accounts = accountsVM.accounts.value?.accounts
+    val firstAccountId = accounts?.firstOrNull()?.accountId
+
+    // Only fetch recurring payments if we don't have them
+    LaunchedEffect(firstAccountId) {
+        firstAccountId?.let {
+            if (transactionsVM.recurringPayments.value == null) {
+                transactionsVM.detectRecurringPayments(it)
+            }
+        }
+    }
+
+    // Get real recurring payments data
+    val recurringPayments = transactionsVM.recurringPayments.value
+
+    LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(BackgroundLight)
-                .padding(padding)
+                .padding(paddingValues)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            recurringPayments?.let { payments ->
-                items(payments) { payment ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        // Use real data
+        recurringPayments?.let { payments ->
+            if (payments.isEmpty()) {
+                    // Show empty state
+                item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    "No recurring payments detected",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    "We'll analyze your transactions to find recurring patterns",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Show real recurring payments
+                    items(payments) { payment ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    payment.mcc.category,
+                                    fontSize = 16.sp,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    "Amount: KD ${payment.latestAmount}",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    "Confidence: ${String.format("%.1f", payment.confidenceScore * 100)}%",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    "Frequency: ${payment.monthsWithPayments} months",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
+                }
+            } ?: run {
+                // Show loading state
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(payment.mcc.category, fontSize = 16.sp, color = Color.Black)
-                            Text("Amount: KD ${payment.latestAmount}", fontSize = 14.sp, color = Color.Gray)
-                            Text("Confidence: ${String.format("%.1f", payment.confidenceScore * 100)}%", fontSize = 14.sp, color = Color.Gray)
-                            Text("Frequency: ${payment.monthsWithPayments} months", fontSize = 14.sp, color = Color.Gray)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CircularProgressIndicator(color = NBKBlue)
+                            Text(
+                                "Analyzing transactions...",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
                         }
                     }
                 }
@@ -92,5 +177,4 @@ fun RecurringPaymentsScreen(navController: NavController) {
                 }
             }
         }
-    }
 }
