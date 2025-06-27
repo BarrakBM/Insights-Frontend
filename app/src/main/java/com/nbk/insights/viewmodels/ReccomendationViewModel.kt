@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.nbk.insights.data.dtos.CategoryRecommendationResponse
 import com.nbk.insights.data.dtos.OfferDTO
 import com.nbk.insights.data.dtos.OffersRecommendationResponse
+import com.nbk.insights.data.dtos.QuickInsightsDTO
 import com.nbk.insights.network.RecommendationsApiService
 import kotlinx.coroutines.launch
 
@@ -24,6 +25,9 @@ class RecommendationsViewModel(
 
     private val _offersByCategory = mutableStateOf<List<OfferDTO>?>(null)
     val offersByCategory: State<List<OfferDTO>?> get() = _offersByCategory
+
+    private val _quickInsights = mutableStateOf<QuickInsightsDTO?>(null)
+    val quickInsights: State<QuickInsightsDTO?> get() = _quickInsights
 
     fun fetchCategoryRecommendations() {
         viewModelScope.launch {
@@ -86,6 +90,29 @@ class RecommendationsViewModel(
                 }
             } catch (e: Exception) {
                 val error = "Exception fetching offers by category: ${e.message}"
+                Log.e(TAG, error, e)
+                setError(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
+    fun fetchQuickInsights() {
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val response = apiService.getQuickInsights()
+                if (response.isSuccessful) {
+                    _quickInsights.value = response.body()
+                    Log.i(TAG, "Fetched quick insights successfully.")
+                } else {
+                    val error = "Failed to fetch quick insights: ${response.message()}"
+                    Log.w(TAG, error)
+                    setError(error)
+                }
+            } catch (e: Exception) {
+                val error = "Exception fetching quick insights: ${e.message}"
                 Log.e(TAG, error, e)
                 setError(error)
             } finally {
