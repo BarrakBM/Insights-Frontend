@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
@@ -63,10 +65,14 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
     }
 
     val account by accountsViewModel.selectedAccount
+    val accountsResponse by accountsViewModel.accounts
+    val accountsList = accountsResponse?.accounts ?: emptyList()
 
     val budgetAdherence by accountsViewModel.budgetAdherence
     val spendingTrends by accountsViewModel.spendingTrends
     val isLoading by accountsViewModel.isLoading
+
+    val pagerState = rememberPagerState(pageCount = { accountsList.size })
 
     LazyColumn(
         modifier = Modifier
@@ -75,13 +81,33 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { AccountCard(account ?: Account(
-            accountId = 0L,
-            accountType = AccountType.MAIN,
-            accountNumber = "xxxxxxxxx",
-            balance = BigDecimal.ZERO,
-            cardNumber = "xxxxxxxxx"
-        )) }
+        item {
+            if (accountsList.isNotEmpty()) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth()
+                ) { index ->
+                    AccountCard(account = accountsList[index]!!)
+                }
+
+                // Update selected account when page changes
+                LaunchedEffect(pagerState.currentPage) {
+                    if (accountsList.isNotEmpty() && pagerState.currentPage < accountsList.size) {
+                        accountsViewModel.setSelectedAccount(accountsList[pagerState.currentPage])
+                    }
+                }
+            } else {
+                // Fallback when no accounts are loaded
+                AccountCard(account = Account(
+                    accountId = 0L,
+                    accountType = AccountType.MAIN,
+                    accountNumber = "xxxxxxxxx",
+                    balance = BigDecimal.ZERO,
+                    cardNumber = "xxxxxxxxx"
+                ))
+            }
+        }
+
         item { MoneyFlowSection() }
         item { FinancialInsights() }
 
