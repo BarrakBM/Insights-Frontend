@@ -2,34 +2,29 @@ package com.nbk.insights.ui.composables
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.ui.screens.drawColoredShadow
@@ -63,6 +58,7 @@ fun QuickInsights() {
         val isLoading = viewmodel.isLoading.value
 
         if (isLoading && quickInsights == null) {
+            // Show loading state
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,7 +71,9 @@ fun QuickInsights() {
                 )
             }
         } else if (quickInsights != null) {
+            // Create insights list from the DTO
             val insights = buildList {
+                // Spending comparison insight
                 if (quickInsights.spendingComparedToLastMonth.isNotBlank()) {
                     add(
                         InsightData(
@@ -84,12 +82,12 @@ fun QuickInsights() {
                             title = "Monthly Spending Update",
                             description = quickInsights.spendingComparedToLastMonth,
                             color = if (quickInsights.spendingComparedToLastMonth.contains("less", ignoreCase = true))
-                                PrimaryBlue else PrimaryBlue
+                                PrimaryBlue else Error
                         )
                     )
                 }
 
-
+                // Budget limit warning
                 if (quickInsights.budgetLimitWarning.isNotBlank()) {
                     add(
                         InsightData(
@@ -101,6 +99,7 @@ fun QuickInsights() {
                     )
                 }
 
+                // Saving insights
                 if (quickInsights.savingInsights.isNotBlank()) {
                     add(
                         InsightData(
@@ -114,6 +113,7 @@ fun QuickInsights() {
             }
 
             if (insights.isEmpty()) {
+                // Show empty state
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -130,7 +130,8 @@ fun QuickInsights() {
             } else {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 20.dp)
                 ) {
                     items(insights) { insight ->
                         InsightCard(
@@ -143,6 +144,7 @@ fun QuickInsights() {
                 }
             }
         } else if (viewmodel.errorMessage.value != null) {
+            // Show error state
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -160,6 +162,7 @@ fun QuickInsights() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun InsightCard(
     icon: ImageVector,
@@ -167,11 +170,28 @@ fun InsightCard(
     description: String,
     color: Color
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val animatedHeight by animateDpAsState(
+        targetValue = if (isExpanded) 160.dp else 105.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "height"
+    )
+    val elevation by animateDpAsState(
+        targetValue = if (isExpanded) 8.dp else 2.dp,
+        animationSpec = spring(),
+        label = "elevation"
+    )
+
     Card(
+        onClick = { isExpanded = !isExpanded },
         modifier = Modifier
             .width(280.dp)
-            .height(100.dp)
-            .shadow(2.dp, RoundedCornerShape(12.dp)),
+            .height(animatedHeight)
+            .shadow(elevation, RoundedCornerShape(12.dp))
+            .zIndex(if (isExpanded) 1f else 0f),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(
@@ -184,12 +204,13 @@ fun InsightCard(
                 .fillMaxWidth()
                 .drawColoredShadow(color, 0.1f)
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top
         ) {
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .height(60.dp)
+                    .fillMaxHeight()
                     .background(color, RoundedCornerShape(2.dp))
             )
             Icon(
@@ -206,19 +227,57 @@ fun InsightCard(
                     title,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextPrimary
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    description,
-                    fontSize = 12.sp,
-                    color = TextSecondary,
-                    lineHeight = 16.sp
-                )
+                AnimatedContent(
+                    targetState = isExpanded,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(150, 150)) with
+                                fadeOut(animationSpec = tween(150)) using
+                                SizeTransform { initialSize, targetSize ->
+                                    if (targetState) {
+                                        keyframes {
+                                            IntSize(targetSize.width, initialSize.height) at 150
+                                            durationMillis = 300
+                                        }
+                                    } else {
+                                        keyframes {
+                                            IntSize(initialSize.width, targetSize.height) at 150
+                                            durationMillis = 300
+                                        }
+                                    }
+                                }
+                    },
+                    label = "text"
+                ) { expanded ->
+                    Text(
+                        description,
+                        fontSize = 12.sp,
+                        color = TextSecondary,
+                        lineHeight = 16.sp,
+                        maxLines = if (expanded) Int.MAX_VALUE else 2,
+                        overflow = if (expanded) TextOverflow.Visible else TextOverflow.Ellipsis
+                    )
+                }
+
+                // Show expand/collapse indicator
+                if (!isExpanded && description.length > 70) {
+                    Text(
+                        "Tap to read more",
+                        fontSize = 10.sp,
+                        color = color,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(top = 1.dp)
+                    )
+                }
             }
         }
     }
 }
 
+// Data class to hold insight information
 private data class InsightData(
     val icon: ImageVector,
     val title: String,

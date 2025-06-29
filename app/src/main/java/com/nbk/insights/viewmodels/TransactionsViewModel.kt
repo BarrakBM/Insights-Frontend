@@ -36,9 +36,6 @@ class TransactionsViewModel(
     private val _recurringPayments = mutableStateOf<List<RecurringPaymentResponse>?>(null)
     val recurringPayments: State<List<RecurringPaymentResponse>?> get() = _recurringPayments
 
-    private val _isRefreshing = mutableStateOf(false)
-    val isRefreshing: State<Boolean> get() = _isRefreshing
-
     fun fetchUserTransactions(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             _isRefreshing.value = true        // start spinner
