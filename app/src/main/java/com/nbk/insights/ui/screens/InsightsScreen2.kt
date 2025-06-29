@@ -1,12 +1,20 @@
 package com.nbk.insights.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,35 +26,315 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.runtime.Composable
+import com.nbk.insights.navigation.Screen
+import com.nbk.insights.data.dtos.*
 import com.nbk.insights.ui.theme.*
+import com.nbk.insights.ui.composables.*
+import com.nbk.insights.utils.AppInitializer
+import com.nbk.insights.viewmodels.AccountsViewModel
+import com.nbk.insights.viewmodels.AuthViewModel
+import com.nbk.insights.viewmodels.TransactionsViewModel
+import com.nbk.insights.ui.theme.*
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Composable
 fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) {
+    val context = LocalContext.current
+    val accountsViewModel: AccountsViewModel = viewModel(
+        factory = remember { AppInitializer.provideAccountsViewModelFactory(context) }
+    )
+
+    // Fetch budget data on load
+    LaunchedEffect(Unit) {
+        accountsViewModel.fetchBudgetAdherence()
+        accountsViewModel.fetchSpendingTrends()
+    }
+
+    val budgetAdherence by accountsViewModel.budgetAdherence
+    val spendingTrends by accountsViewModel.spendingTrends
+    val isLoading by accountsViewModel.isLoading
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues),
-        contentPadding = PaddingValues(16.dp)
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { AccountCard() }
         item { MoneyFlowSection() }
         item { FinancialInsights() }
-        item { BudgetProgress() }
+
+        // Updated Budget Progress with real data
+        item {
+            BudgetProgressWithData(
+                budgetAdherence = budgetAdherence,
+                isLoading = isLoading,
+                onNavigateToBudget = {
+                    navController.navigate("budget_management")
+                }
+            )
+        }
+
         item { SmartRecommendations() }
         item { RecurringTransactions() }
     }
-    }
+}
 
+@Composable
+fun BudgetProgressWithData(
+    budgetAdherence: BudgetAdherenceResponse?,
+    isLoading: Boolean,
+    onNavigateToBudget: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Budget Progress",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+            TextButton(onClick = onNavigateToBudget) {
+                Text(
+                    "Manage",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = PrimaryBlue
+                )
+            }
+        }
+
+        when {
+            isLoading -> {
+                // Loading state
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = PrimaryBlue,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
+            }
+
+            budgetAdherence?.categoryAdherences?.isEmpty() != false -> {
+                // Empty state
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(2.dp, RoundedCornerShape(8.dp)),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    onClick = onNavigateToBudget
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.AccountBalanceWallet,
+                            contentDescription = null,
+                            tint = PrimaryBlue.copy(alpha = 0.6f),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Text(
+                            "No budgets set yet",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextPrimary
+                        )
+                        Text(
+                            "Tap here to start budgeting",
+                            fontSize = 14.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+            }
+
+            else -> {
+                // Show top 3 budget categories
+                val topCategories = budgetAdherence.categoryAdherences
+                    .sortedByDescending { it.percentageUsed }
+                    .take(3)
+
+                topCategories.forEach { categoryAdherence ->
+                    BudgetItemFromData(categoryAdherence)
+                }
+
+                // Show "View All" if there are more than 3 categories
+                if (budgetAdherence.categoryAdherences.size > 3) {
+                    TextButton(
+                        onClick = onNavigateToBudget,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "View all ${budgetAdherence.categoryAdherences.size} budgets →",
+                            fontSize = 14.sp,
+                            color = PrimaryBlue
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BudgetItemFromData(categoryAdherence: CategoryAdherence) {
+    val icon = getBudgetCategoryIcon(categoryAdherence.category)
+    val color = getBudgetCategoryColor(categoryAdherence.adherenceLevel)
+    val spent = categoryAdherence.spentAmount.toFloat()
+    val total = categoryAdherence.budgetAmount.toFloat()
+    val status = getBudgetStatusText(categoryAdherence)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(2.dp, RoundedCornerShape(8.dp)),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        categoryAdherence.category,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextPrimary
+                    )
+                }
+                Text(
+                    "KD ${categoryAdherence.spentAmount.setScale(3, RoundingMode.HALF_UP)} / " +
+                            "KD ${categoryAdherence.budgetAmount.setScale(3, RoundingMode.HALF_UP)}",
+                    fontSize = 12.sp,
+                    color = TextSecondary
+                )
+            }
+
+            LinearProgressIndicator(
+                progress = { (categoryAdherence.percentageUsed / 100f).coerceIn(0.0, 1.0).toFloat() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = color,
+                trackColor = Color.Gray.copy(alpha = 0.2f)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    status,
+                    fontSize = 12.sp,
+                    color = color
+                )
+
+                // Show trend if available
+                if (categoryAdherence.spendingTrend != SpendingTrend.NO_DATA) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = when (categoryAdherence.spendingTrend) {
+                                SpendingTrend.INCREASED -> Icons.Default.TrendingUp
+                                SpendingTrend.DECREASED -> Icons.Default.TrendingDown
+                                else -> Icons.Default.TrendingFlat
+                            },
+                            contentDescription = null,
+                            tint = when (categoryAdherence.spendingTrend) {
+                                SpendingTrend.INCREASED -> WarningAmber
+                                SpendingTrend.DECREASED -> SuccessGreen
+                                else -> TextSecondary
+                            },
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            "${categoryAdherence.spendingChangePercentage.toInt()}% vs last month",
+                            fontSize = 10.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Helper functions - renamed to avoid conflicts
+private fun getBudgetCategoryIcon(category: String): ImageVector {
+    return when (category.uppercase()) {
+        "DINING" -> Icons.Default.Restaurant
+        "GROCERIES", "FOOD_AND_GROCERIES" -> Icons.Default.ShoppingCart
+        "ENTERTAINMENT" -> Icons.Default.SportsEsports
+        "SHOPPING" -> Icons.Default.ShoppingBag
+        "TRANSPORT", "TRANSPORTATION" -> Icons.Default.DirectionsCar
+        "UTILITIES" -> Icons.Default.Bolt
+        "HEALTHCARE" -> Icons.Default.LocalHospital
+        else -> Icons.Default.Category
+    }
+}
+
+private fun getBudgetCategoryColor(adherenceLevel: AdherenceLevel): Color {
+    return when (adherenceLevel) {
+        AdherenceLevel.EXCELLENT -> PrimaryBlue
+        AdherenceLevel.GOOD -> SuccessGreen
+        AdherenceLevel.WARNING -> WarningAmber
+        AdherenceLevel.CRITICAL -> Color(0xFFFF6B6B)
+        AdherenceLevel.EXCEEDED -> Color.Red
+    }
+}
+
+private fun getBudgetStatusText(categoryAdherence: CategoryAdherence): String {
+    val percentageUsed = categoryAdherence.percentageUsed.toInt()
+    return when (categoryAdherence.adherenceLevel) {
+        AdherenceLevel.EXCELLENT -> "$percentageUsed% used - Doing great"
+        AdherenceLevel.GOOD -> "$percentageUsed% used - On track"
+        AdherenceLevel.WARNING -> "$percentageUsed% used - Watch your spending"
+        AdherenceLevel.CRITICAL -> "$percentageUsed% used - Near limit!"
+        AdherenceLevel.EXCEEDED -> "Over budget by ${(percentageUsed - 100)}%"
+    }
+}
+
+// Keep existing components unchanged
 @Composable
 fun AccountCard() {
     Card(
@@ -332,111 +620,6 @@ fun InsightDetailCard(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun BudgetProgress() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(
-            "Budget Progress",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = TextPrimary
-        )
-
-        BudgetItem(
-            icon = Icons.Default.Restaurant,
-            category = "Dining",
-            spent = 320f,
-            total = 400f,
-            color = WarningAmber,
-            status = "80% used - Watch your spending"
-        )
-
-        BudgetItem(
-            icon = Icons.Default.ShoppingCart,
-            category = "Groceries",
-            spent = 280f,
-            total = 500f,
-            color = SuccessGreen,
-            status = "56% used - On track"
-        )
-
-        BudgetItem(
-            icon = Icons.Default.SportsEsports,
-            category = "Entertainment",
-            spent = 85f,
-            total = 200f,
-            color = PrimaryBlue,
-            status = "42% used - Doing great"
-        )
-    }
-}
-
-@Composable
-fun BudgetItem(
-    icon: ImageVector,
-    category: String,
-    spent: Float,
-    total: Float,
-    color: Color,
-    status: String
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(8.dp)),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        icon,
-                        contentDescription = null,
-                        tint = color,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        category,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextPrimary
-                    )
-                }
-                Text(
-                    "${spent.toInt()} / ${total.toInt()}",
-                    fontSize = 12.sp,
-                    color = TextSecondary
-                )
-            }
-            LinearProgressIndicator(
-                progress = { spent / total },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = color,
-                trackColor = Color.Gray.copy(alpha = 0.2f)
-            )
-            Text(
-                status,
-                fontSize = 12.sp,
-                color = color
-            )
         }
     }
 }
