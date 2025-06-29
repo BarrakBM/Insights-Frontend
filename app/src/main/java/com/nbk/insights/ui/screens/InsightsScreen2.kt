@@ -46,6 +46,7 @@ import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.AccountsViewModel
 import java.math.RoundingMode
 import androidx.compose.runtime.getValue
+import java.math.BigDecimal
 
 @Composable
 fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) {
@@ -56,9 +57,12 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
 
     // Fetch budget data on load
     LaunchedEffect(Unit) {
+        accountsViewModel.fetchUserAccounts()
         accountsViewModel.fetchBudgetAdherence()
         accountsViewModel.fetchSpendingTrends()
     }
+
+    val account by accountsViewModel.selectedAccount
 
     val budgetAdherence by accountsViewModel.budgetAdherence
     val spendingTrends by accountsViewModel.spendingTrends
@@ -71,7 +75,13 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { AccountCard() }
+        item { AccountCard(account ?: Account(
+            accountId = 0L,
+            accountType = AccountType.MAIN,
+            accountNumber = "xxxxxxxxx",
+            balance = BigDecimal.ZERO,
+            cardNumber = "xxxxxxxxx"
+        )) }
         item { MoneyFlowSection() }
         item { FinancialInsights() }
 
@@ -345,7 +355,7 @@ private fun getBudgetStatusText(categoryAdherence: CategoryAdherence): String {
 
 // Keep existing components unchanged
 @Composable
-fun AccountCard() {
+fun AccountCard(account: Account) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -389,12 +399,13 @@ fun AccountCard() {
                         }
                         Column {
                             Text(
-                                "Chase Checking",
+                                account.accountType.name.replace("_", " ").lowercase()
+                                    .replaceFirstChar { it.uppercase() },
                                 fontSize = 14.sp,
                                 color = Color.White.copy(alpha = 0.8f)
                             )
                             Text(
-                                "****4567",
+                                account.accountNumber,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White
@@ -417,9 +428,28 @@ fun AccountCard() {
                         color = Color.White.copy(alpha = 0.8f)
                     )
                     Text(
-                        "$24,567.89",
+                        "KD ${account.balance}",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                // Card Number Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Card Number",
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                    Text(
+                        "****${account.cardNumber.takeLast(4)}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
                         color = Color.White
                     )
                 }
