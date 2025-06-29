@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
@@ -46,6 +48,7 @@ import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.AccountsViewModel
 import java.math.RoundingMode
 import androidx.compose.runtime.getValue
+import java.math.BigDecimal
 
 @Composable
 fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) {
@@ -56,13 +59,20 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
 
     // Fetch budget data on load
     LaunchedEffect(Unit) {
+        accountsViewModel.fetchUserAccounts()
         accountsViewModel.fetchBudgetAdherence()
         accountsViewModel.fetchSpendingTrends()
     }
 
+    val account by accountsViewModel.selectedAccount
+    val accountsResponse by accountsViewModel.accounts
+    val accountsList = accountsResponse?.accounts ?: emptyList()
+
     val budgetAdherence by accountsViewModel.budgetAdherence
     val spendingTrends by accountsViewModel.spendingTrends
     val isLoading by accountsViewModel.isLoading
+
+    val pagerState = rememberPagerState(pageCount = { accountsList.size })
 
     LazyColumn(
         modifier = Modifier
@@ -71,7 +81,33 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { AccountCard() }
+        item {
+            if (accountsList.isNotEmpty()) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth()
+                ) { index ->
+                    AccountCard(account = accountsList[index]!!)
+                }
+
+                // Update selected account when page changes
+                LaunchedEffect(pagerState.currentPage) {
+                    if (accountsList.isNotEmpty() && pagerState.currentPage < accountsList.size) {
+                        accountsViewModel.setSelectedAccount(accountsList[pagerState.currentPage])
+                    }
+                }
+            } else {
+                // Fallback when no accounts are loaded
+                AccountCard(account = Account(
+                    accountId = 0L,
+                    accountType = AccountType.MAIN,
+                    accountNumber = "xxxxxxxxx",
+                    balance = BigDecimal.ZERO,
+                    cardNumber = "xxxxxxxxx"
+                ))
+            }
+        }
+
         item { MoneyFlowSection() }
         item { FinancialInsights() }
 
@@ -345,7 +381,7 @@ private fun getBudgetStatusText(categoryAdherence: CategoryAdherence): String {
 
 // Keep existing components unchanged
 @Composable
-fun AccountCard() {
+fun AccountCard(account: Account) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -389,12 +425,13 @@ fun AccountCard() {
                         }
                         Column {
                             Text(
-                                "Chase Checking",
+                                account.accountType.name.replace("_", " ").lowercase()
+                                    .replaceFirstChar { it.uppercase() },
                                 fontSize = 14.sp,
                                 color = Color.White.copy(alpha = 0.8f)
                             )
                             Text(
-                                "****4567",
+                                account.accountNumber,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White
@@ -417,9 +454,28 @@ fun AccountCard() {
                         color = Color.White.copy(alpha = 0.8f)
                     )
                     Text(
-                        "$24,567.89",
+                        "KD ${account.balance}",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                // Card Number Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Card Number",
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                    Text(
+                        "****${account.cardNumber.takeLast(4)}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
                         color = Color.White
                     )
                 }

@@ -45,6 +45,8 @@ class AccountsViewModel(
                 val response = apiService.retrieveUserAccounts()
                 if (response.isSuccessful) {
                     _accounts.value = response.body()
+                    // set default selected account
+                    setSelectedAccount(accounts.value?.accounts[0])
                     Log.i(TAG, "Fetched user accounts successfully.")
                 } else {
                     val error = "Failed to fetch accounts: ${response.message()}"
@@ -61,8 +63,9 @@ class AccountsViewModel(
         }
     }
 
-    fun setSelectedAccount(account: Account) {
-        _selectedAccount.value = account
+    fun setSelectedAccount(account: Account?) {
+        if (account != null)
+            _selectedAccount.value = account
     }
 
     fun fetchTotalBalance() {
@@ -119,7 +122,6 @@ class AccountsViewModel(
                 val response = apiService.deactivateLimit(limitId)
                 if (response.isSuccessful) {
                     Log.i(TAG, "Limit deactivated successfully.")
-                    // Optionally refresh budget adherence after deactivating limit
                     fetchBudgetAdherence()
                 } else {
                     val error = "Failed to deactivate limit: ${response.message()}"
