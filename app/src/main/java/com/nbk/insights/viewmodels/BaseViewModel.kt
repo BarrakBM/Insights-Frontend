@@ -11,6 +11,9 @@ open class BaseViewModel : ViewModel() {
     protected val _errorMessage = mutableStateOf<String?>(null)
     val errorMessage: State<String?> get() = _errorMessage
 
+    internal val _isRefreshing = mutableStateOf(false)
+    val isRefreshing: State<Boolean> get() = _isRefreshing
+
     protected fun setLoading(value: Boolean) {
         _isLoading.value = value
     }
