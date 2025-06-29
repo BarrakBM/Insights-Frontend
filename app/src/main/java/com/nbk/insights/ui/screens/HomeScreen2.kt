@@ -1,16 +1,16 @@
 package com.nbk.insights.ui.screens
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.nbk.insights.data.dtos.CashFlowCategorizedResponse
 import com.nbk.insights.ui.composables.BalanceCard
 import com.nbk.insights.ui.composables.GreetingSection
 import com.nbk.insights.ui.composables.QuickInsights
@@ -24,11 +24,20 @@ import java.math.BigDecimal
 
 @Composable
 fun HomeScreen2(navController: NavController, paddingValues: PaddingValues) {
-    /* ── view-models ─────────────────────────────── */
-    val ctx = LocalContext.current
-    val authVM: AuthViewModel = viewModel(factory = remember { AppInitializer.provideAuthViewModelFactory(ctx) })
-    val accountsVM: AccountsViewModel = viewModel(factory = remember { AppInitializer.provideAccountsViewModelFactory(ctx) })
-    val txVM: TransactionsViewModel = viewModel(factory = remember { AppInitializer.provideTransactionsViewModelFactory(ctx) })
+    /* ── view-models with ACTIVITY SCOPE ─────────────────────────────── */
+    val activity = LocalActivity.current as ComponentActivity
+    val authVM: AuthViewModel = viewModel(
+        viewModelStoreOwner = activity,
+        factory = remember { AppInitializer.provideAuthViewModelFactory(activity) }
+    )
+    val accountsVM: AccountsViewModel = viewModel(
+        viewModelStoreOwner = activity,
+        factory = remember { AppInitializer.provideAccountsViewModelFactory(activity) }
+    )
+    val txVM: TransactionsViewModel = viewModel(
+        viewModelStoreOwner = activity,
+        factory = remember { AppInitializer.provideTransactionsViewModelFactory(activity) }
+    )
 
     /* ── state ───────────────────────────────────── */
     val recentTxs by txVM.userTransactions
@@ -46,12 +55,23 @@ fun HomeScreen2(navController: NavController, paddingValues: PaddingValues) {
 
     var isBalanceVisible by remember { mutableStateOf(false) }
 
+    // mart data fetching - only fetch if data doesn't exist
     LaunchedEffect(Unit) {
-        accountsVM.fetchUserAccounts()
-        accountsVM.fetchTotalBalance()
-        txVM.fetchUserTransactions()
-        txVM.fetchLastMonth()
-        txVM.fetchThisMonth()
+        if (accountsVM.accounts.value == null) {
+            accountsVM.fetchUserAccounts()
+        }
+        if (accountsVM.totalBalance.value == null) {
+            accountsVM.fetchTotalBalance()
+        }
+        if (txVM.userTransactions.value == null) {
+            txVM.fetchUserTransactions()
+        }
+        if (txVM.lastMonth.value == null) {
+            txVM.fetchLastMonth()
+        }
+        if (txVM.thisMonth.value == null) {
+            txVM.fetchThisMonth()
+        }
     }
 
     LazyColumn(

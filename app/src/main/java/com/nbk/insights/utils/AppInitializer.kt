@@ -8,16 +8,18 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.nbk.insights.data.repository.TransactionsRepository
 import com.nbk.insights.network.AccountsApiService
 import com.nbk.insights.network.AuthApiService
+import com.nbk.insights.network.RecommendationsApiService
 import com.nbk.insights.network.RetrofitHelper
 import com.nbk.insights.network.TransactionApiService
 import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.AuthViewModel
+import com.nbk.insights.viewmodels.RecommendationsViewModel
 import com.nbk.insights.viewmodels.TransactionsViewModel
 import retrofit2.Retrofit
 
 object AppInitializer {
 
-    fun provideTokenManager(context: Context): TokenManager {
+    private fun provideTokenManager(context: Context): TokenManager {
         return TokenManager.create(context)
     }
 
@@ -73,10 +75,18 @@ object AppInitializer {
             { retrofit -> retrofit.create(TransactionApiService::class.java) },
             { api ->
                 TransactionsViewModel(
-                    transactionsRepository = TransactionsRepository(api),
-                    transactionApiService = api
+                    TransactionsRepository(api),
+                    api
                 )
             }
+        )
+    }
+
+    fun provideRecommendationsViewModelFactory(context: Context): ViewModelProvider.Factory {
+        return provideViewModelFactoryWithoutToken(
+            context,
+            { retrofit -> retrofit.create(RecommendationsApiService::class.java) },
+            { api -> RecommendationsViewModel(api) }
         )
     }
 }

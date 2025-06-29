@@ -49,7 +49,7 @@ fun SpendingViewAllChart(
     // Calculate totals
     val totalSpent = displayData?.moneyOut ?: BigDecimal.ZERO
     val totalIncome = displayData?.moneyIn ?: BigDecimal.ZERO
-    val saved = totalIncome.subtract(totalSpent)
+    val net = displayData?.netCashFlow
 
     // Get the date range for display
     val dateFormatter = DateTimeFormatter.ofPattern("MMMM yyyy")
@@ -151,12 +151,14 @@ fun SpendingViewAllChart(
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Net", fontSize = 14.sp, color = Color.Gray)
-                    Text(
-                        "KD ${currencyFormat.format(saved)}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (saved >= BigDecimal.ZERO) Success else Error
-                    )
+                    if (net != null) {
+                        Text(
+                            "KD ${currencyFormat.format(net)}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (net >= BigDecimal.ZERO) Success else Error
+                        )
+                    }
                 }
             }
 
@@ -167,7 +169,7 @@ fun SpendingViewAllChart(
                     "Top Categories",
                     fontSize = 12.sp,
                     color = Color.Gray,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
                 )
                 spendingByCategory.entries
                     .sortedByDescending { it.value }

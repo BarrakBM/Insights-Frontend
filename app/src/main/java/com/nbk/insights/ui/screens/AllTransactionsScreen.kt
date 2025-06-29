@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -28,23 +29,32 @@ import com.nbk.insights.ui.theme.*
 import java.time.LocalDateTime
 import kotlin.math.abs
 
-@SuppressLint("DefaultLocale")
+@SuppressLint("DefaultLocale", "ContextCastToActivity")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllTransactionsScreen(
     navController: NavController,
-    accountId: Long? = null // Add optional accountId parameter
+    accountId: Long? = null
 ) {
-    val context = LocalContext.current
-    val transactionsViewModel: TransactionsViewModel =
-        viewModel(factory = remember { AppInitializer.provideTransactionsViewModelFactory(context) })
+    // ✅ Use activity scope instead of composable scope
+    val activity = LocalContext.current as ComponentActivity
+    val transactionsViewModel: TransactionsViewModel = viewModel(
+        viewModelStoreOwner = activity, // 👈 KEY CHANGE
+        factory = remember { AppInitializer.provideTransactionsViewModelFactory(activity) }
+    )
 
-    // Fetch transactions based on whether accountId is provided
+    // ✅ Only fetch if data doesn't exist or accountId changed
     LaunchedEffect(accountId) {
         if (accountId != null) {
-            transactionsViewModel.fetchAccountTransactions(accountId)
-        } else { // other wise fetch whole user transaction
-            transactionsViewModel.fetchUserTransactions()
+            // Check if we already have this account's transactions
+            if (transactionsViewModel.accountTransactions.value == null) {
+                transactionsViewModel.fetchAccountTransactions(accountId)
+            }
+        } else {
+            // Check if we already have user transactions
+            if (transactionsViewModel.userTransactions.value == null) {
+                transactionsViewModel.fetchUserTransactions()
+            }
         }
     }
 

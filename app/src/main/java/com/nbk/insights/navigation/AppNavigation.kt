@@ -2,20 +2,22 @@ package com.nbk.insights.navigation
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.IntOffset
-import com.google.accompanist.navigation.animation.AnimatedNavHost
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.nbk.insights.data.tempfunctions.getBankCards
-import com.nbk.insights.ui.MainLayout
 import com.nbk.insights.ui.composables.CardInsightContent
 import com.nbk.insights.ui.screens.*
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AppNavigation(navController: NavHostController) {
-
+fun AppNavigation(
+    navController: NavHostController,
+    paddingValues: PaddingValues = PaddingValues()
+) {
     var currentRoute by remember { mutableStateOf(Screen.Login.route) }
 
     /* specs reused everywhere */
@@ -44,7 +46,7 @@ fun AppNavigation(navController: NavHostController) {
         slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, slideSpec) + fadeOut(fadeSpec)
 
     /* ---------- NavHost ---------- */
-    AnimatedNavHost(
+    NavHost(
         navController    = navController,
         startDestination = Screen.Login.route,
         /* global = cross-fade */
@@ -94,15 +96,19 @@ fun AppNavigation(navController: NavHostController) {
             enterTransition = { crossFadeIn() },
             exitTransition  = { crossFadeOut() }
         ) {
-            RecurringPaymentsScreen(navController)
+            RecurringPaymentsScreen(navController, paddingValues)
             currentRoute = Screen.RecurringPayments.route
         }
 
-        /* ─── Remaining screens inherit global cross-fade ─── */
+        /* ─── Screens with MainLayout ─── */
         composable(Screen.Home2.route) {
-            MainLayout(selectedTab = "Home", navController = navController) { padding ->
-                HomeScreen2(navController = navController, paddingValues = padding)
-            }
+            HomeScreen2(navController, paddingValues)
+            currentRoute = Screen.Home2.route
+        }
+
+        composable(Screen.Insights2.route) {
+            InsightsScreen2(navController, paddingValues)
+            currentRoute = Screen.Insights2.route
         }
 
         composable(Screen.AllTransactions.route) {
@@ -116,14 +122,7 @@ fun AppNavigation(navController: NavHostController) {
             }
             currentRoute = Screen.AccountTransactions.route
         }
-        composable(Screen.Insights.route) {
-            InsightsScreen(navController)
-        }
-        composable(Screen.Insights2.route) {
-            MainLayout(selectedTab = "Insights", navController = navController) { padding ->
-                InsightsScreen2(navController = navController, paddingValues = padding)
-            }
-        }
+
         composable(Screen.Notifications.route) {
             NotificationScreen(navController)
             currentRoute = Screen.Notifications.route
