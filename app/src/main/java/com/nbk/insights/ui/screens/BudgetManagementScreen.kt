@@ -38,12 +38,15 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun BudgetManagementScreen(
     navController: NavController,
-    accountId: Long? = null // Optional: for account-specific budgets
 ) {
     val context = LocalContext.current
     val accountsViewModel: AccountsViewModel = viewModel(
         factory = remember { AppInitializer.provideAccountsViewModelFactory(context) }
     )
+
+    val selectedAccount by accountsViewModel.selectedAccount
+    val accounts by accountsViewModel.accounts
+
 
     // State
     var showBudgetDialog by remember { mutableStateOf(false) }
@@ -59,14 +62,24 @@ fun BudgetManagementScreen(
     LaunchedEffect(Unit) {
         accountsViewModel.fetchBudgetAdherence()
         accountsViewModel.fetchSpendingTrends()
+        accountsViewModel.fetchUserAccounts()
+    }
+
+    // Auto-select first account if none selected
+    LaunchedEffect(accounts) {
+        if (selectedAccount == null && accounts?.accounts?.isNotEmpty() == true) {
+            accounts!!.accounts.first()?.let { accountsViewModel.setSelectedAccount(it) }
+        }
     }
 
     // Handle budget creation
     fun createBudget(category: Category, amount: BigDecimal, renewsAt: String) {
+        val accountId = selectedAccount?.accountId ?:  0L
+
         val request = LimitsRequest(
             category = category.name,
             amount = amount,
-            accountId = accountId ?: 0L, // Use provided accountId or default
+            accountId = accountId, // Now guaranteed to be a valid account ID
             renewsAt = LocalDate.parse(renewsAt)
         )
         accountsViewModel.setAccountLimit(request)
