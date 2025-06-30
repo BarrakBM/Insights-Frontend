@@ -6,11 +6,18 @@ data class CategoryRecommendationResponse(
 )
 
 data class OffersRecommendationResponse(
-    val message: String
+    val message: String,
+    val offers: List<OfferBrief>
 )
 
-data class OfferDTO(
-    val id: Long,
+data class OfferBrief(
+    val id: Long?,
+    val description: String,
+    val subCategory: String?
+)
+
+data class OfferResponse(
+    val id: Long? = null,
     val description: String
 )
 

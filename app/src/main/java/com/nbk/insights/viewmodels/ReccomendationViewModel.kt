@@ -5,7 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.nbk.insights.data.dtos.CategoryRecommendationResponse
-import com.nbk.insights.data.dtos.OfferDTO
+import com.nbk.insights.data.dtos.OfferResponse
 import com.nbk.insights.data.dtos.OffersRecommendationResponse
 import com.nbk.insights.data.dtos.QuickInsightsDTO
 import com.nbk.insights.network.RecommendationsApiService
@@ -23,8 +23,8 @@ class RecommendationsViewModel(
     private val _offersRecommendation = mutableStateOf<OffersRecommendationResponse?>(null)
     val offersRecommendation: State<OffersRecommendationResponse?> get() = _offersRecommendation
 
-    private val _offersByCategory = mutableStateOf<List<OfferDTO>?>(null)
-    val offersByCategory: State<List<OfferDTO>?> get() = _offersByCategory
+    private val _offersByCategory = mutableStateOf<List<OfferResponse>?>(null)
+    val offersByCategory: State<List<OfferResponse>?> get() = _offersByCategory
 
     private val _quickInsights = mutableStateOf<QuickInsightsDTO?>(null)
     val quickInsights: State<QuickInsightsDTO?> get() = _quickInsights

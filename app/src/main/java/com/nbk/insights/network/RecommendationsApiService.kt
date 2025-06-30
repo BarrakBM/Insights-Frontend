@@ -1,7 +1,7 @@
 package com.nbk.insights.network
 
 import com.nbk.insights.data.dtos.CategoryRecommendationResponse
-import com.nbk.insights.data.dtos.OfferDTO
+import com.nbk.insights.data.dtos.OfferResponse
 import com.nbk.insights.data.dtos.OffersRecommendationResponse
 import com.nbk.insights.data.dtos.QuickInsightsDTO
 import retrofit2.Response
@@ -18,7 +18,7 @@ interface RecommendationsApiService {
     suspend fun getOffersRecommendation(): Response<OffersRecommendationResponse>
 
     @GET("offer/category")
-    suspend fun getOffersByCategory(@Query("category") category: String): Response<List<OfferDTO>>
+    suspend fun getOffersByCategory(@Query("category") category: String): Response<List<OfferResponse>>
 
     @GET("quick-insights")
     suspend fun getQuickInsights(): Response<QuickInsightsDTO>
