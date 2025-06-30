@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,10 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -157,20 +161,65 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
         ) {
             item {
                 if (accountsList.isNotEmpty()) {
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxWidth()
-                    ) { index ->
-                        AccountCard(account = accountsList[index]!!)
+                    Column {
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxWidth(),
+                            pageSpacing = 16.dp, // Space between cards
+                            contentPadding = PaddingValues(horizontal = 24.dp) // Shows partial cards on sides
+                        ) { index ->
+                            AccountCard(
+                                account = accountsList[index]!!,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .graphicsLayer {
+                                        // Optional: Add a subtle scale effect for non-focused cards
+                                        val pageOffset = (
+                                                (pagerState.currentPage - index) + pagerState.currentPageOffsetFraction
+                                                )
+                                        val scale = 1f - (kotlin.math.abs(pageOffset) * 0.05f).coerceIn(0f, 0.05f)
+                                        scaleX = scale
+                                        scaleY = scale
+
+                                        // Optional: Add alpha effect for non-focused cards
+                                        alpha = 1f - (kotlin.math.abs(pageOffset) * 0.3f).coerceIn(0f, 0.3f)
+                                    }
+                            )
+                        }
+
+                        // Optional: Page indicators
+                        if (accountsList.size > 1) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                repeat(accountsList.size) { index ->
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                if (pagerState.currentPage == index) PrimaryBlue
+                                                else PrimaryBlue.copy(alpha = 0.3f)
+                                            )
+                                    )
+                                }
+                            }
+                        }
                     }
                 } else {
-                    AccountCard(account = Account(
-                        accountId = 0L,
-                        accountType = AccountType.MAIN,
-                        accountNumber = "xxxxxxxxx",
-                        balance = BigDecimal.ZERO,
-                        cardNumber = "xxxxxxxxx"
-                    ))
+                    AccountCard(
+                        account = Account(
+                            accountId = 0L,
+                            accountType = AccountType.MAIN,
+                            accountNumber = "xxxxxxxxx",
+                            balance = BigDecimal.ZERO,
+                            cardNumber = "xxxxxxxxx"
+                        )
+                    )
                 }
             }
 
@@ -180,7 +229,17 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
                     isLoading = transactionLoading
                 )
             }
-
+            item {
+                BudgetProgressWithData(
+                    budgetAdherence = budgetAdherence,
+                    recommendations = recommendations,
+                    isLoading = accountLoading,
+                    isLoadingRecommendations = recommendationsLoading,
+                    onNavigateToBudget = {
+                        navController.navigate("budget_management")
+                    }
+                )
+            }
             item {
                 TransactionsAndRecurringCard(
                     navController = navController,
@@ -193,17 +252,7 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
                 )
             }
 
-            item {
-                BudgetProgressWithData(
-                    budgetAdherence = budgetAdherence,
-                    recommendations = recommendations,
-                    isLoading = accountLoading,
-                    isLoadingRecommendations = recommendationsLoading,
-                    onNavigateToBudget = {
-                        navController.navigate("budget_management")
-                    }
-                )
-            }
+
         }
     }
 }
@@ -260,8 +309,10 @@ fun MoneyFlowSection(
             MoneyFlowCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Savings,
-                label = "net",
-                amount = "KD ${net.abs().setScale(3, RoundingMode.HALF_UP)}",
+                label = "Net",
+                amount = if (net >= BigDecimal.ZERO) "KD +${
+                    net.abs().setScale(3, RoundingMode.HALF_UP)
+                }" else "KD -${net.abs().setScale(3, RoundingMode.HALF_UP)}",
                 color = if (net >= BigDecimal.ZERO) PrimaryBlue else Color.Red,
             )
         }
@@ -309,7 +360,9 @@ fun MoneyFlowCard(
                 amount,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = color
+                color = color,
+                maxLines = 1,
+//                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -468,8 +521,21 @@ fun BudgetItemFromData(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(2.dp, RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = if (expanded) 0.dp else 8.dp, bottomEnd = if (expanded) 0.dp else 8.dp)),
-            shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = if (expanded) 0.dp else 8.dp, bottomEnd = if (expanded) 0.dp else 8.dp),
+                .shadow(
+                    2.dp,
+                    RoundedCornerShape(
+                        topStart = 8.dp,
+                        topEnd = 8.dp,
+                        bottomStart = if (expanded) 0.dp else 8.dp,
+                        bottomEnd = if (expanded) 0.dp else 8.dp
+                    )
+                ),
+            shape = RoundedCornerShape(
+                topStart = 8.dp,
+                topEnd = 8.dp,
+                bottomStart = if (expanded) 0.dp else 8.dp,
+                bottomEnd = if (expanded) 0.dp else 8.dp
+            ),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Column(
@@ -502,7 +568,12 @@ fun BudgetItemFromData(
                     }
                     Text(
                         "KD ${categoryAdherence.spentAmount.setScale(3, RoundingMode.HALF_UP)} / " +
-                                "KD ${categoryAdherence.budgetAmount.setScale(3, RoundingMode.HALF_UP)}",
+                                "KD ${
+                                    categoryAdherence.budgetAmount.setScale(
+                                        3,
+                                        RoundingMode.HALF_UP
+                                    )
+                                }",
                         fontSize = 12.sp,
                         color = TextSecondary
                     )
@@ -565,7 +636,12 @@ fun BudgetItemFromData(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { expanded = !expanded },
-            shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
+            shape = RoundedCornerShape(
+                topStart = 0.dp,
+                topEnd = 0.dp,
+                bottomStart = 8.dp,
+                bottomEnd = 8.dp
+            ),
             colors = CardDefaults.cardColors(containerColor = PrimaryBlue.copy(alpha = 0.05f))
         ) {
             Row(
@@ -584,7 +660,7 @@ fun BudgetItemFromData(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     "Smart Recommendations",
-                    fontSize = 12.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = PrimaryBlue
                 )
@@ -599,86 +675,142 @@ fun BudgetItemFromData(
                 )
             }
         }
-
         // Expandable Recommendation Content
         AnimatedVisibility(
             visible = expanded,
             enter = expandVertically(
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessLow
                 )
-            ) + fadeIn(),
+            ) + fadeIn(
+                animationSpec = tween(150)
+            ),
             exit = shrinkVertically(
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessLow
                 )
-            ) + fadeOut()
+            ) + fadeOut(
+                animationSpec = tween(150)
+            )
         ) {
-            Card(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(8.dp, RoundedCornerShape(16.dp)),
-                shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                    .padding(top = 4.dp) // Small gap between main card and recommendation
             ) {
-                when {
-                    isLoadingRecommendation -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = PrimaryBlue,
-                                strokeWidth = 2.dp
-                            )
-                        }
-                    }
-                    recommendation != null -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                recommendation.recommendation,
-                                fontSize = 13.sp,
-                                color = TextSecondary,
-                                lineHeight = 20.sp
-                            )
-
-                            // Optional: Add action buttons if needed
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(
+                            elevation = 2.dp,
+                            shape = RoundedCornerShape(12.dp),
+                            clip = false
+                        ),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFF8FAFB) // Slight gray tint for visual separation
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = Color(0xFFE8ECEF) // Subtle border
+                    )
+                ) {
+                    when {
+                        isLoadingRecommendation -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                TextButton(onClick = { /* Handle action */ }) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = PrimaryBlue,
+                                        strokeWidth = 2.dp
+                                    )
                                     Text(
-                                        "View Offers",
-                                        fontSize = 12.sp,
-                                        color = PrimaryBlue
+                                        "Loading recommendation...",
+                                        fontSize = 13.sp,
+                                        color = TextSecondary.copy(alpha = 0.7f)
                                     )
                                 }
                             }
                         }
-                    }
-                    else -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "No recommendations available",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
+
+                        recommendation != null -> {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Recommendation Icon
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(PrimaryBlue.copy(alpha = 0.1f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.Lightbulb,
+                                        contentDescription = null,
+                                        tint = PrimaryBlue,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+
+                                // Recommendation Text
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        "Recommendation",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = TextSecondary
+                                    )
+                                    Text(
+                                        recommendation.recommendation,
+                                        fontSize = 14.sp,
+                                        color = TextPrimary,
+                                        lineHeight = 20.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        else -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = TextSecondary.copy(alpha = 0.5f),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        "No recommendations available",
+                                        fontSize = 13.sp,
+                                        color = TextSecondary.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -721,13 +853,12 @@ private fun getBudgetStatusText(categoryAdherence: CategoryAdherence): String {
         AdherenceLevel.EXCEEDED -> "Over budget by ${(percentageUsed - 100)}%"
     }
 }
-
 @Composable
-fun AccountCard(account: Account) {
+fun AccountCard(account: Account, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(16.dp)),
+            .shadow(2.dp, RoundedCornerShape(16.dp)), // Reduced shadow for consistency
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
@@ -736,7 +867,14 @@ fun AccountCard(account: Account) {
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(PrimaryBlue, Color(0xFF1976D2))
+                        colors = listOf(
+                            NBKBlue.copy(red = NBKBlue.red * 1.15f, green = NBKBlue.green * 1.15f, blue = NBKBlue.blue * 1.1f), // Lighter start
+                            NBKBlue,
+                            NBKBlue.copy(red = NBKBlue.red * 0.85f, green = NBKBlue.green * 0.85f, blue = NBKBlue.blue * 0.9f), // More contrast
+                            NBKBlue.copy(red = NBKBlue.red * 0.7f, green = NBKBlue.green * 0.7f, blue = NBKBlue.blue * 0.8f) // Darker end
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY) // Diagonal gradient
                     )
                 )
                 .padding(20.dp)
@@ -755,7 +893,7 @@ fun AccountCard(account: Account) {
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f)),
+                                .background(Color.White.copy(alpha = 0.15f)), // Slightly reduced opacity
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -770,7 +908,7 @@ fun AccountCard(account: Account) {
                                 account.accountType.name.replace("_", " ").lowercase()
                                     .replaceFirstChar { it.uppercase() },
                                 fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.8f)
+                                color = Color.White.copy(alpha = 0.9f) // Increased opacity
                             )
                             Text(
                                 account.accountNumber,
@@ -783,7 +921,7 @@ fun AccountCard(account: Account) {
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.6f)
+                        tint = Color.White.copy(alpha = 0.7f) // Slightly increased opacity
                     )
                 }
                 Column(
@@ -793,10 +931,10 @@ fun AccountCard(account: Account) {
                     Text(
                         "Current Balance",
                         fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = Color.White.copy(alpha = 0.9f) // Increased opacity
                     )
                     Text(
-                        "KD ${account.balance}",
+                        "KD\u00A0${account.balance}", // Non-breaking space
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -811,7 +949,7 @@ fun AccountCard(account: Account) {
                     Text(
                         "Card Number",
                         fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = Color.White.copy(alpha = 0.85f) // Slightly increased opacity
                     )
                     Text(
                         "****${account.cardNumber.takeLast(4)}",
