@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import com.nbk.insights.data.dtos.AccountInsightsCache
 import com.nbk.insights.data.dtos.CashFlowCategorizedResponse
 import com.nbk.insights.data.dtos.TransactionResponse
 import com.nbk.insights.data.dtos.RecurringPaymentResponse
@@ -39,8 +40,8 @@ class TransactionsViewModel(
     private val _recurringPayments = mutableStateOf<List<RecurringPaymentResponse>?>(null)
     val recurringPayments: State<List<RecurringPaymentResponse>?> get() = _recurringPayments
 
-    private val _cashFlowCache = mutableStateOf<Map<Long, CashFlowCategorizedResponse>>(emptyMap())
-    val cashFlowCache: State<Map<Long, CashFlowCategorizedResponse>> = _cashFlowCache
+    private val _accountInsightsCache = mutableStateOf<Map<Long, AccountInsightsCache>>(emptyMap())
+    val accountInsightsCache: State<Map<Long, AccountInsightsCache>> = _accountInsightsCache
 
     fun fetchUserTransactions(forceRefresh: Boolean = false) {
         viewModelScope.launch {
@@ -85,7 +86,15 @@ class TransactionsViewModel(
                     month = month
                 )
                 if (response.isSuccessful) {
-                    _accountTransactions.value = response.body()
+                    val txList = response.body()
+                    _accountTransactions.value = txList
+
+                    val existing = _accountInsightsCache.value[accountId]
+                    _accountInsightsCache.value += (accountId to AccountInsightsCache(
+                        cashFlow = existing?.cashFlow,
+                        transactions = txList,
+                        recurringPayments = existing?.recurringPayments
+                    ))
                     Log.i(TAG, "Fetched account transactions successfully for account $accountId")
                 } else {
                     val error = "Failed to fetch account transactions: ${response.message()}"
@@ -108,7 +117,15 @@ class TransactionsViewModel(
             try {
                 val response = transactionApiService.detectRecurringPaymentsForAccount(accountId)
                 if (response.isSuccessful) {
-                    _recurringPayments.value = response.body()
+                    val recurringList = response.body()
+                    _recurringPayments.value = recurringList
+
+                    val existing = _accountInsightsCache.value[accountId]
+                    _accountInsightsCache.value += (accountId to AccountInsightsCache(
+                        cashFlow = existing?.cashFlow,
+                        transactions = existing?.transactions,
+                        recurringPayments = recurringList
+                    ))
                     Log.i(TAG, "Detected recurring payments successfully for account $accountId")
                 } else {
                     val error = "Failed to detect recurring payments: ${response.message()}"
@@ -181,9 +198,12 @@ class TransactionsViewModel(
                 val response = transactionApiService.retrieveAccountThisMonth(accountId)
                 if (response.isSuccessful) {
                     response.body()?.let { cashFlowData ->
-                        // Store in cache
-                        _cashFlowCache.value += (accountId to cashFlowData)
-                        // Set as current
+                        val existing = _accountInsightsCache.value[accountId]
+                        _accountInsightsCache.value += (accountId to AccountInsightsCache(
+                            cashFlow = cashFlowData,
+                            transactions = existing?.transactions,
+                            recurringPayments = existing?.recurringPayments
+                        ))
                         _thisMonthAccount.value = cashFlowData
                         Log.i(TAG, "Fetched and cached this month successfully for Account: $accountId")
                     }
@@ -202,15 +222,20 @@ class TransactionsViewModel(
         }
     }
 
-    fun setThisMonthAccountFromCache(accountId: Long) {
-        _cashFlowCache.value[accountId]?.let { cachedData ->
-            _thisMonthAccount.value = cachedData
-            Log.i(TAG, "Using cached data for Account: $accountId")
+    fun setAccountInsightsFromCache(accountId: Long) {
+        _accountInsightsCache.value[accountId]?.let { cache ->
+            _thisMonthAccount.value = cache.cashFlow
+            _accountTransactions.value = cache.transactions
+            _recurringPayments.value = cache.recurringPayments
+            Log.i(TAG, "Loaded insights from cache for account: $accountId")
         }
     }
 
-    fun clearCashFlowCache() {
-        _cashFlowCache.value = emptyMap()
+    fun clearCache() {
+        _accountInsightsCache.value = emptyMap()
+        _thisMonthAccount.value = null
+        _accountTransactions.value = null
+        _recurringPayments.value = null
     }
 
     fun clearAccountTransactions() {

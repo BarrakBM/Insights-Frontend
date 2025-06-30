@@ -47,7 +47,7 @@ fun LoginScreen(navController: NavController) {
     /* Navigate once authenticated */
     LaunchedEffect(token?.token, user, isLoading) {
         if (!token?.token.isNullOrBlank() && user != null && !isLoading) {
-            navController.navigate(Screen.Home2.route) {
+            navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
         }
