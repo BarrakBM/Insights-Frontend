@@ -1,15 +1,17 @@
 package com.nbk.insights.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -20,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,7 +49,7 @@ fun BudgetManagementScreen(
 
     val selectedAccount by accountsViewModel.selectedAccount
     val accounts by accountsViewModel.accounts
-
+    val accountLimits by accountsViewModel.accountLimits
 
     // State
     var showBudgetDialog by remember { mutableStateOf(false) }
@@ -65,6 +68,13 @@ fun BudgetManagementScreen(
         accountsViewModel.fetchUserAccounts()
     }
 
+    // Fetch account limits when selected account changes
+    LaunchedEffect(selectedAccount) {
+        selectedAccount?.accountId?.let { accountId ->
+            accountsViewModel.fetchAccountLimits(accountId)
+        }
+    }
+
     // Auto-select first account if none selected
     LaunchedEffect(accounts) {
         if (selectedAccount == null && accounts?.accounts?.isNotEmpty() == true) {
@@ -72,14 +82,26 @@ fun BudgetManagementScreen(
         }
     }
 
+    // Helper function to find limit ID by category (FIXED: use accountLimits instead of limits)
+    fun findLimitIdByCategory(category: String): Long? {
+        return accountLimits?.accountLimits?.find {
+            it?.category?.equals(category, ignoreCase = true) == true
+        }?.limitId
+    }
+
+    // Helper function to check if budget exists for category
+    fun budgetExistsForCategory(category: String): Boolean {
+        return findLimitIdByCategory(category) != null
+    }
+
     // Handle budget creation
     fun createBudget(category: Category, amount: BigDecimal, renewsAt: String) {
-        val accountId = selectedAccount?.accountId ?:  0L
+        val accountId = selectedAccount?.accountId ?: 0L
 
         val request = LimitsRequest(
             category = category.name,
             amount = amount,
-            accountId = accountId, // Now guaranteed to be a valid account ID
+            accountId = accountId,
             renewsAt = LocalDate.parse(renewsAt)
         )
         accountsViewModel.setAccountLimit(request)
@@ -243,22 +265,350 @@ fun BudgetManagementScreen(
         )
     }
 
-    // Edit Budget Dialog (simplified version - you'd need to create a proper edit dialog)
+    // Budget Edit/Remove Dialog
+    // Replace your Budget Edit/Remove Dialog section with this:
+
+// Budget Edit/Remove Dialog
     if (showEditDialog && selectedCategoryAdherence != null) {
-        AlertDialog(
-            onDismissRequest = { showEditDialog = false },
-            title = { Text("Edit Budget") },
-            text = {
-                Text("Editing budget for ${selectedCategoryAdherence!!.category}")
-            },
-            confirmButton = {
-                TextButton(onClick = { showEditDialog = false }) {
-                    Text("Close")
+        BudgetEditDialog(
+            categoryAdherence = selectedCategoryAdherence!!,
+            onDismiss = { showEditDialog = false },
+            onEdit = { category, amount, renewsAt ->
+                // Handle budget edit - find limit ID and update properly
+                val limitId = findLimitIdByCategory(selectedCategoryAdherence!!.category)
+                val accountId = selectedAccount?.accountId ?: 0L
+
+                val request = LimitsRequest(
+                    category = category.name,
+                    amount = amount,
+                    accountId = accountId,
+                    renewsAt = LocalDate.parse(renewsAt)
+                )
+
+                if (limitId != null) {
+                    // Update existing budget
+                    accountsViewModel.updateAccountLimit(limitId, request)
+                } else {
+                    // Fallback: create new budget (shouldn't happen in edit mode)
+                    accountsViewModel.setAccountLimit(request)
                 }
+                showEditDialog = false
+            },
+            onRemove = {
+                // Find the actual limit ID by category
+                val limitId = findLimitIdByCategory(selectedCategoryAdherence!!.category)
+                if (limitId != null) {
+                    accountsViewModel.deactivateLimit(limitId)
+                } else {
+                    Log.e("BudgetManagement", "Could not find limit ID for category: ${selectedCategoryAdherence!!.category}")
+                }
+                showEditDialog = false
             }
         )
     }
 }
+
+
+// Replace the BudgetEditDialog in your BudgetManagementScreen.kt with this corrected version:
+
+@Composable
+fun BudgetEditDialog(
+    categoryAdherence: CategoryAdherence,
+    onDismiss: () -> Unit,
+    onEdit: (Category, BigDecimal, String) -> Unit,
+    onRemove: () -> Unit // Changed: Remove the limitId parameter since it's handled in the parent
+) {
+    var showEditForm by remember { mutableStateOf(false) }
+    var showRemoveConfirmation by remember { mutableStateOf(false) }
+
+    // Edit form states
+    var amount by remember { mutableStateOf(categoryAdherence.budgetAmount.toString()) }
+    var renewsAt by remember { mutableStateOf(categoryAdherence.renewsAt.toString()) }
+
+    when {
+        showRemoveConfirmation -> {
+            AlertDialog(
+                onDismissRequest = { showRemoveConfirmation = false },
+                title = {
+                    Text(
+                        text = "Remove Budget",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Column {
+                        Text("Are you sure you want to remove the budget for ${categoryAdherence.category}?")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Current budget: KD ${categoryAdherence.budgetAmount}",
+                            fontSize = 14.sp,
+                            color = TextSecondary
+                        )
+                        Text(
+                            "Amount spent: KD ${categoryAdherence.spentAmount}",
+                            fontSize = 14.sp,
+                            color = TextSecondary
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onRemove() // Call the parent's remove function which handles finding the limitId
+                            showRemoveConfirmation = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Error)
+                    ) {
+                        Text("Remove")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRemoveConfirmation = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        showEditForm -> {
+            AlertDialog(
+                onDismissRequest = { showEditForm = false },
+                title = {
+                    Text(
+                        text = "Edit Budget",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Category (read-only)
+                        OutlinedTextField(
+                            value = categoryAdherence.category,
+                            onValueChange = { },
+                            label = { Text("Category") },
+                            enabled = false,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Amount
+                        OutlinedTextField(
+                            value = amount,
+                            onValueChange = { amount = it },
+                            label = { Text("Budget Amount (KD)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.fillMaxWidth(),
+                            prefix = { Text("KD ") }
+                        )
+
+                        // Renews At
+                        OutlinedTextField(
+                            value = renewsAt,
+                            onValueChange = { renewsAt = it },
+                            label = { Text("Renews At (YYYY-MM-DD)") },
+                            placeholder = { Text("2025-12-31") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Current spending info
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = NBKBlue.copy(alpha = 0.1f)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp)
+                            ) {
+                                Text(
+                                    text = "Current spending: KD ${categoryAdherence.spentAmount}",
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = "${categoryAdherence.percentageUsed.toInt()}% of current budget used",
+                                    fontSize = 12.sp,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            try {
+                                val category = Category.valueOf(categoryAdherence.category.uppercase())
+                                val budgetAmount = BigDecimal(amount)
+                                onEdit(category, budgetAmount, renewsAt)
+                                showEditForm = false
+                            } catch (e: Exception) {
+                                // Handle validation errors - you might want to show a toast or error message
+                            }
+                        }
+                    ) {
+                        Text("Save Changes")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEditForm = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        else -> {
+            // Main action dialog
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    getCategoryColor(categoryAdherence.category).copy(alpha = 0.1f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                getCategoryIcon(categoryAdherence.category),
+                                contentDescription = null,
+                                tint = getCategoryColor(categoryAdherence.category),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = categoryAdherence.category,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                text = {
+                    Column {
+                        // Budget info
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFF8FAFC)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Budget:",
+                                        fontSize = 14.sp,
+                                        color = TextSecondary
+                                    )
+                                    Text(
+                                        text = "KD ${categoryAdherence.budgetAmount}",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = TextPrimary
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Spent:",
+                                        fontSize = 14.sp,
+                                        color = TextSecondary
+                                    )
+                                    Text(
+                                        text = "KD ${categoryAdherence.spentAmount}",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (categoryAdherence.adherenceLevel == AdherenceLevel.EXCEEDED) Error else TextPrimary
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Renews:",
+                                        fontSize = 14.sp,
+                                        color = TextSecondary
+                                    )
+                                    Text(
+                                        text = categoryAdherence.renewsAt.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = TextPrimary
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "What would you like to do?",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                },
+                confirmButton = {
+                    Column {
+                        // Edit button
+                        Button(
+                            onClick = { showEditForm = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = NBKBlue)
+                        ) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Edit Budget")
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Remove button
+                        OutlinedButton(
+                            onClick = { showRemoveConfirmation = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Error),
+                            border = BorderStroke(1.dp, Error)
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Remove Budget")
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+}
+
+
 
 @Composable
 fun BudgetSummaryCard(budgetAdherence: BudgetAdherenceResponse?) {
@@ -455,50 +805,111 @@ fun SpendingTrendCard(trend: SpendingTrendResponse) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                getCategoryColor(trend.category).copy(alpha = 0.1f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            getCategoryIcon(trend.category),
+                            contentDescription = null,
+                            tint = getCategoryColor(trend.category),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = trend.category,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Budget: KD ${trend.budgetAmount}",
+                            fontSize = 12.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (trend.spendingChange > BigDecimal.ZERO)
+                                Icons.Default.TrendingUp else Icons.Default.TrendingDown,
+                            contentDescription = null,
+                            tint = if (trend.spendingChange > BigDecimal.ZERO) Error else Success,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${trend.spendingChangePercentage.toInt()}%",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (trend.spendingChange > BigDecimal.ZERO) Error else Success
+                        )
+                    }
+                    Text(
+                        text = "vs last month",
+                        fontSize = 10.sp,
+                        color = TextSecondary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Trend Progress Bar
+            LinearProgressIndicator(
+                progress = {
+                    (kotlin.math.abs(trend.spendingChangePercentage.toFloat()) / 100f).coerceIn(0.0f, 1.0f)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = if (trend.spendingChange > BigDecimal.ZERO) Error else Success,
+                trackColor = Color(0xFFF3F4F6)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Additional info row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = trend.category,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = TextPrimary
-                )
-                Text(
-                    text = "Budget: KD ${trend.budgetAmount}",
+                    text = "Spending Change",
                     fontSize = 12.sp,
                     color = TextSecondary
                 )
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (trend.spendingChange > BigDecimal.ZERO)
-                            Icons.Default.TrendingUp else Icons.Default.TrendingDown,
-                        contentDescription = null,
-                        tint = if (trend.spendingChange > BigDecimal.ZERO) Error else Success,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${trend.spendingChangePercentage.toInt()}%",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (trend.spendingChange > BigDecimal.ZERO) Error else Success
-                    )
-                }
                 Text(
-                    text = "vs last month",
-                    fontSize = 10.sp,
-                    color = TextSecondary
+                    text = "KD ${trend.spendingChange}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (trend.spendingChange > BigDecimal.ZERO) Error else Success
                 )
             }
         }
