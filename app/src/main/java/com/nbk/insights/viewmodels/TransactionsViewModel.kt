@@ -213,6 +213,10 @@ class TransactionsViewModel(
         _cashFlowCache.value = emptyMap()
     }
 
+    fun clearAccountTransactions() {
+        _accountTransactions.value = null
+    }
+
     fun refreshUserTransactions() {
         fetchUserTransactions(forceRefresh = true)
     }
