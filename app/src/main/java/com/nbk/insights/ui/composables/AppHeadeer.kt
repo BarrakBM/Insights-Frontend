@@ -41,7 +41,7 @@ fun AppHeader() {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Compact branding
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.TrendingUp, contentDescription = null,
                     modifier = Modifier.size(16.dp), tint = PrimaryBlue)
