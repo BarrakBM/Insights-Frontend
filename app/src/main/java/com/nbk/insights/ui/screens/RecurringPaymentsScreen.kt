@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.nbk.insights.ui.composables.RecurringPaymentCard
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.TransactionsViewModel
@@ -124,37 +125,13 @@ fun RecurringPaymentsScreen(navController: NavController, paddingValues: Padding
             // Show recurring payments
             recurringPayments != null -> {
                 items(recurringPayments) { payment ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                payment.mcc.category,
-                                fontSize = 16.sp,
-                                color = Color.Black
-                            )
-                            Text(
-                                "Amount: KD ${String.format("%.2f", payment.latestAmount)}",
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
-                            Text(
-                                "Confidence: ${String.format("%.1f", payment.confidenceScore * 100)}%",
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
-                            Text(
-                                "Frequency: ${payment.monthsWithPayments} months",
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
+                    RecurringPaymentCard(
+                        payment = payment,
+                        onClick = {
+                            // Optional: Navigate to payment details
+                            // navController.navigate("payment_details/${payment.id}")
                         }
-                    }
+                    )
                 }
             }
 

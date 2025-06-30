@@ -16,3 +16,9 @@ data class RecurringPaymentResponse(
     val lastDetected: LocalDateTime,
     val skippedPaymentEstimate: List<LocalDateTime>
 )
+
+data class AccountInsightsCache(
+    val cashFlow: CashFlowCategorizedResponse?,
+    val transactions: List<TransactionResponse>?,
+    val recurringPayments: List<RecurringPaymentResponse>?
+)

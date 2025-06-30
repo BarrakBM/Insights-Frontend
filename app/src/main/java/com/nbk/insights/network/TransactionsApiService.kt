@@ -30,4 +30,9 @@ interface TransactionApiService {
     @GET("retrieve/cash-flow/this/month")
     suspend fun retrieveThisMonth(): Response<CashFlowCategorizedResponse>
 
+    @GET("retrieve/cash-flow/this/month/{accountId}")
+    suspend fun retrieveAccountThisMonth(
+        @Path("accountId") accountId: Long
+    ): Response<CashFlowCategorizedResponse>
+
 }

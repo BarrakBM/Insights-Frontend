@@ -40,8 +40,8 @@ fun InsightsApp() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val routesWithMainLayout = listOf(
-        Screen.Home2.route,
-        Screen.Insights2.route,
+        Screen.Home.route,
+        Screen.Insights.route,
         Screen.Explore.route, // Add Explore to routes with MainLayout
         Screen.RecurringPayments.route
     )
@@ -51,8 +51,8 @@ fun InsightsApp() {
     if (showMainLayout) {
         MainLayout(
             selectedTab = when (currentRoute) {
-                Screen.Home2.route -> "Home"
-                Screen.Insights2.route -> "Insights"
+                Screen.Home.route -> "Home"
+                Screen.Insights.route -> "Insights"
                 Screen.Explore.route -> "Explore" // Add Explore tab mapping
                 Screen.RecurringPayments.route -> "Recurring"
                 else -> "Home"

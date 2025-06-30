@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,10 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.PrimaryBlue
-import com.nbk.insights.ui.theme.TextSecondary
 
 @Composable
-fun AppHeader() {
+fun AppHeaderWithBack(
+    title: String,
+    onBackClick: () -> Unit,
+    action: @Composable (() -> Unit)? = null
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.White,
@@ -43,37 +46,35 @@ fun AppHeader() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryBlue.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
+                // Back button
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.size(32.dp)
                 ) {
-                    Icon(
-                        Icons.Default.TrendingUp,
-                        contentDescription = null,
-                        tint = PrimaryBlue,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryBlue.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
+
                 Text(
-                    "Insights+",
+                    title,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = PrimaryBlue
                 )
             }
-//            Row(
-//                horizontalArrangement = Arrangement.spacedBy(16.dp),
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Icon(
-//                    Icons.Outlined.Notifications,
-//                    contentDescription = "Notifications",
-//                    tint = TextSecondary
-//                )
-//            }
+            action?.invoke()
         }
     }
 }

@@ -68,29 +68,6 @@ fun AppNavigation(
             currentRoute = Screen.Login.route
         }
 
-        /* ─── HOME ───  (override only if coming from Login) */
-        composable(
-            route = Screen.Home.route,
-            enterTransition = {
-                if (currentRoute == Screen.Login.route)  slideInFromRight() else crossFadeIn()
-            },
-            exitTransition = {
-                if (targetState.destination.route == Screen.Login.route) slideOutToRight() else crossFadeOut()
-            }
-        ) {
-            HomeScreen(navController)
-            currentRoute = Screen.Home.route
-        }
-
-        /* ─── INSIGHTS (cross-fade) ─── */
-        composable(Screen.Insights.route,
-            enterTransition = { crossFadeIn() },
-            exitTransition  = { crossFadeOut() }
-        ) {
-            InsightsScreen(navController)
-            currentRoute = Screen.Insights.route
-        }
-
         /* ─── RECURRING PAYMENTS (cross-fade) ─── */
         composable(Screen.RecurringPayments.route,
             enterTransition = { crossFadeIn() },
@@ -110,14 +87,14 @@ fun AppNavigation(
         }
 
         /* ─── Screens with MainLayout ─── */
-        composable(Screen.Home2.route) {
-            HomeScreen2(navController, paddingValues)
-            currentRoute = Screen.Home2.route
+        composable(Screen.Home.route) {
+            HomeScreen(navController, paddingValues)
+            currentRoute = Screen.Home.route
         }
 
-        composable(Screen.Insights2.route) {
-            InsightsScreen2(navController, paddingValues)
-            currentRoute = Screen.Insights2.route
+        composable(Screen.Insights.route) {
+            InsightsScreen(navController, paddingValues)
+            currentRoute = Screen.Insights.route
         }
 
         composable(Screen.AllTransactions.route) {
