@@ -29,12 +29,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.nbk.insights.R
 import com.nbk.insights.data.dtos.*
 import com.nbk.insights.ui.composables.TransactionsAndRecurringCard
 import com.nbk.insights.ui.theme.*
@@ -252,11 +254,89 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
                 )
             }
 
-
+            item {
+                BudgetProgressWithData(
+                    budgetAdherence = budgetAdherence,
+                    recommendations = recommendations,
+                    isLoading = accountLoading,
+                    isLoadingRecommendations = recommendationsLoading,
+                    onNavigateToBudget = {
+                        navController.navigate("budget_management")
+                    }
+                )
+            }
         }
     }
 }
 
+@Composable
+fun CamelIcon(
+    modifier: Modifier = Modifier,
+    tint: Color = Color.Unspecified
+) {
+    Icon(
+        painter = painterResource(id = R.drawable.nbk_kw), // You'd need to add this SVG
+        contentDescription = "Camel",
+        modifier = modifier,
+        tint = tint
+    )
+}
+
+// Replace your existing MoneyFlowCard composable with this updated version
+
+@Composable
+fun MoneyFlowCard(
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    customIcon: @Composable ((Color) -> Unit)? = null,
+    label: String,
+    amount: String,
+    color: Color,
+) {
+    Card(
+        modifier = modifier.shadow(2.dp, RoundedCornerShape(8.dp)),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (icon != null) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(16.dp)
+                    )
+                } else if (customIcon != null) {
+                    customIcon(color)
+                }
+            }
+            Text(
+                label,
+                fontSize = 12.sp,
+                color = TextSecondary
+            )
+            Text(
+                amount,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+        }
+    }
+}
+
+// And update your MoneyFlowSection usage:
 @Composable
 fun MoneyFlowSection(
     cashFlow: CashFlowCategorizedResponse?,
@@ -308,11 +388,14 @@ fun MoneyFlowSection(
             )
             MoneyFlowCard(
                 modifier = Modifier.weight(1f),
-                icon = Icons.Default.Savings,
+                customIcon = { tintColor ->
+                    CamelIcon(
+                        modifier = Modifier.size(16.dp),
+                        tint = tintColor
+                    )
+                },
                 label = "Net",
-                amount = if (net >= BigDecimal.ZERO) "KD +${
-                    net.abs().setScale(3, RoundingMode.HALF_UP)
-                }" else "KD -${net.abs().setScale(3, RoundingMode.HALF_UP)}",
+                amount = "KD ${net.abs().setScale(3, RoundingMode.HALF_UP)}",
                 color = if (net >= BigDecimal.ZERO) PrimaryBlue else Color.Red,
             )
         }
@@ -675,6 +758,7 @@ fun BudgetItemFromData(
                 )
             }
         }
+
         // Expandable Recommendation Content
         AnimatedVisibility(
             visible = expanded,
@@ -853,6 +937,7 @@ private fun getBudgetStatusText(categoryAdherence: CategoryAdherence): String {
         AdherenceLevel.EXCEEDED -> "Over budget by ${(percentageUsed - 100)}%"
     }
 }
+
 @Composable
 fun AccountCard(account: Account, modifier: Modifier = Modifier) {
     Card(
