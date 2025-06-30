@@ -46,7 +46,7 @@ class AccountsViewModel(
                 if (response.isSuccessful) {
                     _accounts.value = response.body()
                     // set default selected account
-                    setSelectedAccount(accounts.value?.accounts[0])
+                    setSelectedAccount(accounts.value?.accounts?.get(0))
                     Log.i(TAG, "Fetched user accounts successfully.")
                 } else {
                     val error = "Failed to fetch accounts: ${response.message()}"
@@ -98,8 +98,12 @@ class AccountsViewModel(
                 val response = apiService.setAccountLimit(limitsRequest)
                 if (response.isSuccessful) {
                     Log.i(TAG, "Account limit set successfully.")
-                    // Optionally refresh budget adherence after setting limit
+                    // Refresh budget adherence after setting limit
                     fetchBudgetAdherence()
+                    // Also refresh account limits
+                    selectedAccount.value?.accountId?.let { accountId ->
+                        fetchAccountLimits(accountId)
+                    }
                 } else {
                     val error = "Failed to set account limit: ${response.message()}"
                     Log.w(TAG, error)
@@ -122,7 +126,11 @@ class AccountsViewModel(
                 val response = apiService.deactivateLimit(limitId)
                 if (response.isSuccessful) {
                     Log.i(TAG, "Limit deactivated successfully.")
+                    // Refresh data after deactivation
                     fetchBudgetAdherence()
+                    selectedAccount.value?.accountId?.let { accountId ->
+                        fetchAccountLimits(accountId)
+                    }
                 } else {
                     val error = "Failed to deactivate limit: ${response.message()}"
                     Log.w(TAG, error)
@@ -160,6 +168,35 @@ class AccountsViewModel(
             }
         }
     }
+
+    // FIXED: Now uses the proper API method
+    fun updateAccountLimit(limitId: Long, limitsRequest: LimitsRequest) {
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val response = apiService.updateAccountLimit(limitId, limitsRequest)
+                if (response.isSuccessful) {
+                    Log.i(TAG, "Account limit updated successfully.")
+                    // Refresh data after updating
+                    fetchBudgetAdherence()
+                    selectedAccount.value?.accountId?.let { accountId ->
+                        fetchAccountLimits(accountId)
+                    }
+                } else {
+                    val error = "Failed to update account limit: ${response.message()}"
+                    Log.w(TAG, error)
+                    setError(error)
+                }
+            } catch (e: Exception) {
+                val error = "Exception updating account limit: ${e.message}"
+                Log.e(TAG, error, e)
+                setError(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
     fun fetchAccountLimits(accountId: Long) {
         viewModelScope.launch {
             setLoading(true)
@@ -182,6 +219,7 @@ class AccountsViewModel(
             }
         }
     }
+
     fun fetchSpendingTrends() {
         viewModelScope.launch {
             setLoading(true)
