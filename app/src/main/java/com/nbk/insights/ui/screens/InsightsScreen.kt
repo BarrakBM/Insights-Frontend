@@ -2,40 +2,26 @@ package com.nbk.insights.ui.screens
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -46,20 +32,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.nbk.insights.data.dtos.*
+import com.nbk.insights.ui.composables.TransactionsAndRecurringCard
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.AccountsViewModel
-import java.math.RoundingMode
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import com.nbk.insights.ui.composables.SmartRecommendationsDrawer
-import com.nbk.insights.ui.composables.TransactionsAndRecurringCard
 import com.nbk.insights.viewmodels.RecommendationsViewModel
 import com.nbk.insights.viewmodels.TransactionsViewModel
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,6 +83,7 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
     val accountInsightsCache by transactionViewModel.accountInsightsCache
 
     val recommendations by recommendationsViewModel.categoryRecommendations
+    val recommendationsLoading by recommendationsViewModel.isLoading
 
     val selectedAccountId = account?.accountId
 
@@ -116,6 +98,9 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
         }
         if (accountsViewModel.spendingTrends.value == null) {
             accountsViewModel.fetchSpendingTrends()
+        }
+        if (recommendationsViewModel.categoryRecommendations.value == null) {
+            recommendationsViewModel.fetchCategoryRecommendations()
         }
     }
 
@@ -135,9 +120,6 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
             }
         }
     }
-
-
-
 
     LaunchedEffect(pagerState.currentPage) {
         if (accountsList.isNotEmpty() && pagerState.currentPage < accountsList.size) {
@@ -159,6 +141,8 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
                 accountsViewModel.fetchUserAccounts()
                 accountsViewModel.fetchBudgetAdherence()
                 accountsViewModel.fetchSpendingTrends()
+
+                recommendationsViewModel.fetchCategoryRecommendations()
             }
         },
         state = pullState,
@@ -196,6 +180,7 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
                     isLoading = transactionLoading
                 )
             }
+
             item {
                 TransactionsAndRecurringCard(
                     navController = navController,
@@ -211,21 +196,16 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
             item {
                 BudgetProgressWithData(
                     budgetAdherence = budgetAdherence,
+                    recommendations = recommendations,
                     isLoading = accountLoading,
+                    isLoadingRecommendations = recommendationsLoading,
                     onNavigateToBudget = {
                         navController.navigate("budget_management")
                     }
                 )
             }
-
-            if (!recommendations.isNullOrEmpty()) {
-                item {
-                    SmartRecommendationsDrawer(recommendations = recommendations!!)
-                }
-            }
         }
     }
-
 }
 
 @Composable
@@ -238,7 +218,6 @@ fun MoneyFlowSection(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (isLoading) {
-            // Loading state
             repeat(3) {
                 Card(
                     modifier = Modifier
@@ -263,7 +242,6 @@ fun MoneyFlowSection(
             val moneyIn = cashFlow?.moneyIn ?: BigDecimal.ZERO
             val moneyOut = cashFlow?.moneyOut ?: BigDecimal.ZERO
             val net = cashFlow?.netCashFlow ?: BigDecimal.ZERO
-
 
             MoneyFlowCard(
                 modifier = Modifier.weight(1f),
@@ -340,7 +318,9 @@ fun MoneyFlowCard(
 @Composable
 fun BudgetProgressWithData(
     budgetAdherence: BudgetAdherenceResponse?,
+    recommendations: List<CategoryRecommendationResponse>?,
     isLoading: Boolean,
+    isLoadingRecommendations: Boolean,
     onNavigateToBudget: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -429,7 +409,15 @@ fun BudgetProgressWithData(
                     .take(3)
 
                 topCategories.forEach { categoryAdherence ->
-                    BudgetItemFromData(categoryAdherence)
+                    val recommendation = recommendations?.find {
+                        it.category.equals(categoryAdherence.category, ignoreCase = true)
+                    }
+
+                    BudgetItemFromData(
+                        categoryAdherence = categoryAdherence,
+                        recommendation = recommendation,
+                        isLoadingRecommendation = isLoadingRecommendations
+                    )
                 }
 
                 if (budgetAdherence.categoryAdherences.size > 3) {
@@ -450,103 +438,248 @@ fun BudgetProgressWithData(
 }
 
 @Composable
-fun BudgetItemFromData(categoryAdherence: CategoryAdherence) {
+fun BudgetItemFromData(
+    categoryAdherence: CategoryAdherence,
+    recommendation: CategoryRecommendationResponse? = null,
+    isLoadingRecommendation: Boolean = false
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(300),
+        label = "rotation"
+    )
+
     val icon = getBudgetCategoryIcon(categoryAdherence.category)
     val color = getBudgetCategoryColor(categoryAdherence.adherenceLevel)
     val status = getBudgetStatusText(categoryAdherence)
 
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(8.dp)),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        icon,
-                        contentDescription = null,
-                        tint = color,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        categoryAdherence.category,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextPrimary
-                    )
-                }
-                Text(
-                    "KD ${categoryAdherence.spentAmount.setScale(3, RoundingMode.HALF_UP)} / " +
-                            "KD ${
-                                categoryAdherence.budgetAmount.setScale(
-                                    3,
-                                    RoundingMode.HALF_UP
-                                )
-                            }",
-                    fontSize = 12.sp,
-                    color = TextSecondary
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
                 )
-            }
-
-            LinearProgressIndicator(
-                progress = {
-                    (categoryAdherence.percentageUsed / 100f).coerceIn(0.0, 1.0).toFloat()
-                },
+            )
+    ) {
+        // Main Budget Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(2.dp, RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = if (expanded) 0.dp else 8.dp, bottomEnd = if (expanded) 0.dp else 8.dp)),
+            shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = if (expanded) 0.dp else 8.dp, bottomEnd = if (expanded) 0.dp else 8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = color,
-                trackColor = Color.Gray.copy(alpha = 0.2f)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    status,
-                    fontSize = 12.sp,
-                    color = color
-                )
-
-                if (categoryAdherence.spendingTrend != SpendingTrend.NO_DATA) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = when (categoryAdherence.spendingTrend) {
-                                SpendingTrend.INCREASED -> Icons.Default.TrendingUp
-                                SpendingTrend.DECREASED -> Icons.Default.TrendingDown
-                                else -> Icons.Default.TrendingFlat
-                            },
+                            icon,
                             contentDescription = null,
-                            tint = when (categoryAdherence.spendingTrend) {
-                                SpendingTrend.INCREASED -> WarningAmber
-                                SpendingTrend.DECREASED -> SuccessGreen
-                                else -> TextSecondary
-                            },
-                            modifier = Modifier.size(12.dp)
+                            tint = color,
+                            modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            "${categoryAdherence.spendingChangePercentage.toInt()}% vs last month",
-                            fontSize = 10.sp,
-                            color = TextSecondary
+                            categoryAdherence.category,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextPrimary
                         )
+                    }
+                    Text(
+                        "KD ${categoryAdherence.spentAmount.setScale(3, RoundingMode.HALF_UP)} / " +
+                                "KD ${categoryAdherence.budgetAmount.setScale(3, RoundingMode.HALF_UP)}",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                }
+
+                LinearProgressIndicator(
+                    progress = {
+                        (categoryAdherence.percentageUsed / 100f).coerceIn(0.0, 1.0).toFloat()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = color,
+                    trackColor = Color.Gray.copy(alpha = 0.2f)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        status,
+                        fontSize = 12.sp,
+                        color = color
+                    )
+
+                    if (categoryAdherence.spendingTrend != SpendingTrend.NO_DATA) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = when (categoryAdherence.spendingTrend) {
+                                    SpendingTrend.INCREASED -> Icons.Default.TrendingUp
+                                    SpendingTrend.DECREASED -> Icons.Default.TrendingDown
+                                    else -> Icons.Default.TrendingFlat
+                                },
+                                contentDescription = null,
+                                tint = when (categoryAdherence.spendingTrend) {
+                                    SpendingTrend.INCREASED -> WarningAmber
+                                    SpendingTrend.DECREASED -> SuccessGreen
+                                    else -> TextSecondary
+                                },
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                "${categoryAdherence.spendingChangePercentage.toInt()}% vs last month",
+                                fontSize = 10.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Drawer Handle (Always Visible)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded },
+            shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = PrimaryBlue.copy(alpha = 0.05f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Lightbulb,
+                    contentDescription = "Smart Recommendations",
+                    tint = PrimaryBlue,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Smart Recommendations",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = PrimaryBlue
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .rotate(rotationAngle),
+                    tint = PrimaryBlue
+                )
+            }
+        }
+
+        // Expandable Recommendation Content
+        AnimatedVisibility(
+            visible = expanded,
+            enter = expandVertically(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ) + fadeIn(),
+            exit = shrinkVertically(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ) + fadeOut()
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(8.dp, RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                when {
+                    isLoadingRecommendation -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = PrimaryBlue,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                    recommendation != null -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                recommendation.recommendation,
+                                fontSize = 13.sp,
+                                color = TextSecondary,
+                                lineHeight = 20.sp
+                            )
+
+                            // Optional: Add action buttons if needed
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(onClick = { /* Handle action */ }) {
+                                    Text(
+                                        "View Offers",
+                                        fontSize = 12.sp,
+                                        color = PrimaryBlue
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "No recommendations available",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                        }
                     }
                 }
             }
@@ -691,120 +824,3 @@ fun AccountCard(account: Account) {
         }
     }
 }
-
-//@Composable
-//fun FinancialInsights() {
-//    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-//        Text(
-//            "Financial Insights",
-//            fontSize = 18.sp,
-//            fontWeight = FontWeight.SemiBold,
-//            color = TextPrimary
-//        )
-//
-//        InsightDetailCard(
-//            icon = Icons.Default.TrendingUp,
-//            title = "Excellent Savings Rate",
-//            description = "You're saving 39% of your income this month - well above the recommended 20%!",
-//            progress = 0.39f,
-//            progressText = "39%",
-//            color = SuccessGreen
-//        )
-//
-//        InsightDetailCard(
-//            icon = Icons.Default.PieChart,
-//            title = "Spending Pattern Analysis",
-//            description = "Your largest expense category is housing (45%), followed by food (22%).",
-//            actionText = "View detailed breakdown →",
-//            color = PrimaryBlue
-//        )
-//    }
-//}
-
-//@Composable
-//fun InsightDetailCard(
-//    icon: ImageVector,
-//    title: String,
-//    description: String,
-//    progress: Float? = null,
-//    progressText: String? = null,
-//    actionText: String? = null,
-//    color: Color
-//) {
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .shadow(2.dp, RoundedCornerShape(8.dp)),
-//        shape = RoundedCornerShape(8.dp),
-//        colors = CardDefaults.cardColors(containerColor = Color.White)
-//    ) {
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp),
-//            horizontalArrangement = Arrangement.spacedBy(12.dp)
-//        ) {
-//            Box(
-//                modifier = Modifier
-//                    .width(4.dp)
-//                    .height(80.dp)
-//                    .background(color, RoundedCornerShape(2.dp))
-//            )
-//            Icon(
-//                icon,
-//                contentDescription = null,
-//                tint = color,
-//                modifier = Modifier.size(20.dp)
-//            )
-//            Column(
-//                modifier = Modifier.weight(1f),
-//                verticalArrangement = Arrangement.spacedBy(8.dp)
-//            ) {
-//                Text(
-//                    title,
-//                    fontSize = 14.sp,
-//                    fontWeight = FontWeight.SemiBold,
-//                    color = TextPrimary
-//                )
-//                Text(
-//                    description,
-//                    fontSize = 12.sp,
-//                    color = TextSecondary,
-//                    lineHeight = 16.sp
-//                )
-//                progress?.let {
-//                    Row(
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-//                    ) {
-//                        LinearProgressIndicator(
-//                            progress = { it },
-//                            modifier = Modifier
-//                                .weight(1f)
-//                                .height(8.dp)
-//                                .clip(RoundedCornerShape(4.dp)),
-//                            color = color,
-//                            trackColor = Color.Gray.copy(alpha = 0.2f)
-//                        )
-//                        progressText?.let { text ->
-//                            Text(
-//                                text,
-//                                fontSize = 12.sp,
-//                                fontWeight = FontWeight.Medium,
-//                                color = color
-//                            )
-//                        }
-//                    }
-//                }
-//                actionText?.let {
-//                    Text(
-//                        it,
-//                        fontSize = 12.sp,
-//                        fontWeight = FontWeight.Medium,
-//                        color = color
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
