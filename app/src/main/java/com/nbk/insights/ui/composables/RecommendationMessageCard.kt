@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nbk.insights.ui.theme.NBKBlue
 
+// ENHANCED RecommendationMessageCard with Typography Dials
 @Composable
 fun RecommendationMessageCard(message: String) {
     Card(
@@ -69,18 +70,30 @@ fun RecommendationMessageCard(message: String) {
                 ) {
                     Text(
                         "Smart Recommendation",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,                    // 🎛️ DIAL 7: Header size (16sp → 18sp)
+                        fontWeight = FontWeight.ExtraBold,   // 🎛️ DIAL 8: Header weight (Bold → ExtraBold)
                         color = Color.White
                     )
                     Text(
                         message,
-                        fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.9f),
-                        lineHeight = 20.sp
+                        fontSize = 15.sp,                       // 🎛️ DIAL 9: Message size (14sp → 15sp)
+                        fontWeight = FontWeight.Medium,         // 🎛️ DIAL 10: Message weight (added)
+                        color = Color.White.copy(alpha = 0.95f), // 🎛️ DIAL 11: Message opacity (0.9f → 0.95f)
+                        lineHeight = 22.sp                      // 🎛️ DIAL 12: Line height (20sp → 22sp)
                     )
                 }
             }
         }
     }
 }
+
+// 🎛️ READABILITY DIAL REFERENCE:
+/*
+RecommendationMessageCard Dials:
+DIAL 7 - Header Size: 18.sp (increased prominence)
+DIAL 8 - Header Weight: ExtraBold (maximum impact)
+DIAL 9 - Message Size: 15.sp (better readability)
+DIAL 10 - Message Weight: Medium (added structure)
+DIAL 11 - Message Opacity: 0.95f (clearer text)
+DIAL 12 - Line Height: 22.sp (better text spacing)
+*/

@@ -93,7 +93,7 @@ fun CategoryOfferCard(
                 }
             )
 
-            // Gradient overlay for text readability
+            // 🎛️ DIAL 1: Gradient Overlay Strength
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -101,8 +101,8 @@ fun CategoryOfferCard(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.Black.copy(alpha = 0.75f),
-                                Color.Black.copy(alpha = 0.6f)
+                                Color.Black.copy(alpha = 0.85f), // 🎛️ DIAL: Increase for darker overlay (0.5f to 0.9f)
+                                Color.Black.copy(alpha = 0.7f)   // 🎛️ DIAL: Bottom opacity (0.6f to 0.95f)
                             ),
                             startY = 0f,
                             endY = Float.POSITIVE_INFINITY
@@ -124,8 +124,8 @@ fun CategoryOfferCard(
                 Column {
                     Text(
                         offer.description,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,                    // 🎛️ DIAL 2: Main text size (14sp to 18sp)
+                        fontWeight = FontWeight.Bold,        // 🎛️ DIAL 3: Font weight (Medium/SemiBold/Bold/ExtraBold)
                         color = Color.White,
                         maxLines = 2
                     )
@@ -134,8 +134,9 @@ fun CategoryOfferCard(
                     offer.subCategory?.let { subCategory ->
                         Text(
                             subCategory,
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 13.sp,                       // 🎛️ DIAL 4: Subtitle size (11sp to 15sp)
+                            fontWeight = FontWeight.SemiBold,       // 🎛️ DIAL 5: Subtitle weight (Normal/Medium/SemiBold/Bold)
+                            color = Color.White.copy(alpha = 0.9f), // 🎛️ DIAL 6: Subtitle opacity (0.7f to 1.0f)
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
@@ -156,3 +157,40 @@ fun CategoryOfferCard(
         }
     }
 }
+
+// 🎛️ READABILITY DIAL REFERENCE:
+/*
+DIAL 1 - Gradient Overlay Strength:
+- Light overlay: 0.5f, 0.6f
+- Medium overlay: 0.75f, 0.8f
+- Strong overlay: 0.85f, 0.9f
+- Maximum overlay: 0.9f, 0.95f
+
+DIAL 2 - Main Text Size:
+- Small: 14.sp
+- Medium: 16.sp (recommended)
+- Large: 18.sp
+
+DIAL 3 - Main Text Weight:
+- FontWeight.Medium (lighter)
+- FontWeight.SemiBold
+- FontWeight.Bold (recommended)
+- FontWeight.ExtraBold (heaviest)
+
+DIAL 4 - Subtitle Size:
+- Small: 11.sp
+- Medium: 13.sp (recommended)
+- Large: 15.sp
+
+DIAL 5 - Subtitle Weight:
+- FontWeight.Normal
+- FontWeight.Medium
+- FontWeight.SemiBold (recommended)
+- FontWeight.Bold
+
+DIAL 6 - Subtitle Opacity:
+- Subtle: 0.7f
+- Medium: 0.8f
+- Strong: 0.9f (recommended)
+- Full: 1.0f
+*/

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -33,6 +35,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.nbk.insights.data.dtos.OfferBrief
 import com.nbk.insights.ui.theme.NBKBlue
 
+// IMPROVED RelevantOfferCard with Readability Dials
 @Composable
 fun RelevantOfferCard(offer: OfferBrief) {
     Card(
@@ -91,7 +94,7 @@ fun RelevantOfferCard(offer: OfferBrief) {
                 }
             )
 
-            // Gradient overlay for text readability
+            // 🎛️ DIAL 1: Gradient Overlay Strength
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -99,8 +102,8 @@ fun RelevantOfferCard(offer: OfferBrief) {
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.Black.copy(alpha = 0.75f),
-                                Color.Black.copy(alpha = 0.6f)
+                                Color.Black.copy(alpha = 0.85f), // 🎛️ DIAL: Stronger overlay (0.75f → 0.85f)
+                                Color.Black.copy(alpha = 0.7f)   // 🎛️ DIAL: Bottom opacity (0.6f → 0.9f)
                             ),
                             startY = 0f,
                             endY = Float.POSITIVE_INFINITY
@@ -122,16 +125,17 @@ fun RelevantOfferCard(offer: OfferBrief) {
                 Column {
                     Text(
                         offer.description,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontSize = 18.sp,                    // 🎛️ DIAL 2: Main text size (16sp → 18sp)
+                        fontWeight = FontWeight.Bold,        // 🎛️ DIAL 3: Font weight (Medium → Bold)
                         color = Color.White,
                         maxLines = 2
                     )
                     offer.subCategory?.let { subCategory ->
                         Text(
                             subCategory,
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 14.sp,                       // 🎛️ DIAL 4: Subtitle size (12sp → 14sp)
+                            fontWeight = FontWeight.SemiBold,       // 🎛️ DIAL 5: Subtitle weight (added)
+                            color = Color.White.copy(alpha = 0.95f), // 🎛️ DIAL 6: Subtitle opacity (0.9f → 0.95f)
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
@@ -152,3 +156,14 @@ fun RelevantOfferCard(offer: OfferBrief) {
         }
     }
 }
+
+// 🎛️ READABILITY DIAL REFERENCE:
+/*
+RelevantOfferCard Dials:
+DIAL 1 - Gradient Overlay: 0.85f, 0.9f (stronger than before)
+DIAL 2 - Main Text Size: 18.sp (bigger for prominence)
+DIAL 3 - Main Text Weight: Bold (stronger than Medium)
+DIAL 4 - Subtitle Size: 14.sp (bigger for readability)
+DIAL 5 - Subtitle Weight: SemiBold (added weight)
+DIAL 6 - Subtitle Opacity: 0.95f (higher visibility)
+ */
