@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.TrendingUp
@@ -35,45 +36,18 @@ fun AppHeader() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 8.dp), // Reduced padding
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryBlue.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.TrendingUp,
-                        contentDescription = null,
-                        tint = PrimaryBlue,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                Text(
-                    "Insights+",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PrimaryBlue
-                )
+            // Compact branding
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.TrendingUp, contentDescription = null,
+                    modifier = Modifier.size(16.dp), tint = PrimaryBlue)
+                Text("Insights+", fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
-//            Row(
-//                horizontalArrangement = Arrangement.spacedBy(16.dp),
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Icon(
-//                    Icons.Outlined.Notifications,
-//                    contentDescription = "Notifications",
-//                    tint = TextSecondary
-//                )
-//            }
+
         }
     }
 }
