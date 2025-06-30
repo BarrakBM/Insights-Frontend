@@ -33,8 +33,14 @@ class TransactionsViewModel(
     private val _thisMonth = mutableStateOf<CashFlowCategorizedResponse?>(null)
     val thisMonth: State<CashFlowCategorizedResponse?> get() = _thisMonth
 
+    private val _thisMonthAccount = mutableStateOf<CashFlowCategorizedResponse?>(null)
+    val thisMonthAccount: State<CashFlowCategorizedResponse?> get() = _thisMonthAccount
+
     private val _recurringPayments = mutableStateOf<List<RecurringPaymentResponse>?>(null)
     val recurringPayments: State<List<RecurringPaymentResponse>?> get() = _recurringPayments
+
+    private val _cashFlowCache = mutableStateOf<Map<Long, CashFlowCategorizedResponse>>(emptyMap())
+    val cashFlowCache: State<Map<Long, CashFlowCategorizedResponse>> = _cashFlowCache
 
     fun fetchUserTransactions(forceRefresh: Boolean = false) {
         viewModelScope.launch {
@@ -167,6 +173,44 @@ class TransactionsViewModel(
                 setLoading(false)
             }
         }
+    }
+    fun fetchThisMonthAccount(accountId: Long) {
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val response = transactionApiService.retrieveAccountThisMonth(accountId)
+                if (response.isSuccessful) {
+                    response.body()?.let { cashFlowData ->
+                        // Store in cache
+                        _cashFlowCache.value += (accountId to cashFlowData)
+                        // Set as current
+                        _thisMonthAccount.value = cashFlowData
+                        Log.i(TAG, "Fetched and cached this month successfully for Account: $accountId")
+                    }
+                } else {
+                    val error = "Failed to fetch this month: ${response.message()}"
+                    Log.w(TAG, error)
+                    setError(error)
+                }
+            } catch (e: Exception) {
+                val error = "Exception fetching this month: ${e.message}"
+                Log.e(TAG, error, e)
+                setError(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
+    fun setThisMonthAccountFromCache(accountId: Long) {
+        _cashFlowCache.value[accountId]?.let { cachedData ->
+            _thisMonthAccount.value = cachedData
+            Log.i(TAG, "Using cached data for Account: $accountId")
+        }
+    }
+
+    fun clearCashFlowCache() {
+        _cashFlowCache.value = emptyMap()
     }
 
     fun refreshUserTransactions() {

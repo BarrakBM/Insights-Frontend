@@ -1,5 +1,7 @@
 package com.nbk.insights.ui.screens
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,21 +50,21 @@ import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.AccountsViewModel
 import java.math.RoundingMode
 import androidx.compose.runtime.getValue
+import com.nbk.insights.viewmodels.TransactionsViewModel
 import java.math.BigDecimal
 
 @Composable
-fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) {
-    val context = LocalContext.current
+fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues, accountId: Long? = null) {
+    val activity = LocalActivity.current as ComponentActivity
     val accountsViewModel: AccountsViewModel = viewModel(
-        factory = remember { AppInitializer.provideAccountsViewModelFactory(context) }
+        viewModelStoreOwner = activity,
+        factory = remember { AppInitializer.provideAccountsViewModelFactory(activity) }
     )
 
-    // Fetch budget data on load
-    LaunchedEffect(Unit) {
-        accountsViewModel.fetchUserAccounts()
-        accountsViewModel.fetchBudgetAdherence()
-        accountsViewModel.fetchSpendingTrends()
-    }
+    val transactionViewModel: TransactionsViewModel = viewModel(
+        viewModelStoreOwner = activity,
+        factory = remember { AppInitializer.provideTransactionsViewModelFactory(activity) }
+    )
 
     val account by accountsViewModel.selectedAccount
     val accountsResponse by accountsViewModel.accounts
@@ -72,7 +74,39 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
     val spendingTrends by accountsViewModel.spendingTrends
     val isLoading by accountsViewModel.isLoading
 
+    val thisMonthCashFlow by transactionViewModel.thisMonthAccount
+    val transactionLoading by transactionViewModel.isLoading
+    val cashFlowCache by transactionViewModel.cashFlowCache
+
     val pagerState = rememberPagerState(pageCount = { accountsList.size })
+
+    LaunchedEffect(Unit) {
+        if (accountsViewModel.accounts.value == null) {
+            accountsViewModel.fetchUserAccounts()
+        }
+        if (accountsViewModel.budgetAdherence.value == null) {
+            accountsViewModel.fetchBudgetAdherence()
+        }
+        if (accountsViewModel.spendingTrends.value == null) {
+            accountsViewModel.fetchSpendingTrends()
+        }
+    }
+
+    LaunchedEffect(account?.accountId) {
+        account?.let { selectedAccount ->
+            if (!cashFlowCache.containsKey(selectedAccount.accountId)) {
+                transactionViewModel.fetchThisMonthAccount(selectedAccount.accountId)
+            } else {
+                transactionViewModel.setThisMonthAccountFromCache(selectedAccount.accountId)
+            }
+        }
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (accountsList.isNotEmpty() && pagerState.currentPage < accountsList.size) {
+            accountsViewModel.setSelectedAccount(accountsList[pagerState.currentPage])
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -89,13 +123,6 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
                 ) { index ->
                     AccountCard(account = accountsList[index]!!)
                 }
-
-                // Update selected account when page changes
-                LaunchedEffect(pagerState.currentPage) {
-                    if (accountsList.isNotEmpty() && pagerState.currentPage < accountsList.size) {
-                        accountsViewModel.setSelectedAccount(accountsList[pagerState.currentPage])
-                    }
-                }
             } else {
                 // Fallback when no accounts are loaded
                 AccountCard(account = Account(
@@ -108,10 +135,15 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
             }
         }
 
-        item { MoneyFlowSection() }
-        item { FinancialInsights() }
+        item {
+            MoneyFlowSection(
+                cashFlow = thisMonthCashFlow,
+                isLoading = transactionLoading
+            )
+        }
 
-        // Updated Budget Progress with real data
+//        item { FinancialInsights() }
+
         item {
             BudgetProgressWithData(
                 budgetAdherence = budgetAdherence,
@@ -126,6 +158,117 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues) 
         item { RecurringTransactions() }
     }
 }
+
+@Composable
+fun MoneyFlowSection(
+    cashFlow: CashFlowCategorizedResponse?,
+    isLoading: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (isLoading) {
+            // Loading state
+            repeat(3) {
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(140.dp)
+                        .shadow(2.dp, RoundedCornerShape(8.dp)),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = PrimaryBlue,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        } else {
+            val moneyIn = cashFlow?.moneyIn ?: BigDecimal.ZERO
+            val moneyOut = cashFlow?.moneyOut ?: BigDecimal.ZERO
+            val net = cashFlow?.netCashFlow ?: BigDecimal.ZERO
+
+
+            MoneyFlowCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.ArrowDownward,
+                label = "Money In",
+                amount = "KD ${moneyIn.setScale(3, RoundingMode.HALF_UP)}",
+                color = SuccessGreen
+            )
+            MoneyFlowCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.ArrowUpward,
+                label = "Money Out",
+                amount = "KD ${moneyOut.setScale(3, RoundingMode.HALF_UP)}",
+                color = Color.Red
+            )
+            MoneyFlowCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.Savings,
+                label = "net",
+                amount = "KD ${net.abs().setScale(3, RoundingMode.HALF_UP)}",
+                color = if (net >= BigDecimal.ZERO) PrimaryBlue else Color.Red,
+            )
+        }
+    }
+}
+
+@Composable
+fun MoneyFlowCard(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    label: String,
+    amount: String,
+    color: Color,
+) {
+    Card(
+        modifier = modifier.shadow(2.dp, RoundedCornerShape(8.dp)),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Text(
+                label,
+                fontSize = 12.sp,
+                color = TextSecondary
+            )
+            Text(
+                amount,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+        }
+    }
+}
+
+// Keep all other components unchanged...
 
 @Composable
 fun BudgetProgressWithData(
@@ -157,7 +300,6 @@ fun BudgetProgressWithData(
 
         when {
             isLoading -> {
-                // Loading state
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -178,7 +320,6 @@ fun BudgetProgressWithData(
             }
 
             budgetAdherence?.categoryAdherences?.isEmpty() != false -> {
-                // Empty state
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -216,7 +357,6 @@ fun BudgetProgressWithData(
             }
 
             else -> {
-                // Show top 3 budget categories
                 val topCategories = budgetAdherence.categoryAdherences
                     .sortedByDescending { it.percentageUsed }
                     .take(3)
@@ -225,7 +365,6 @@ fun BudgetProgressWithData(
                     BudgetItemFromData(categoryAdherence)
                 }
 
-                // Show "View All" if there are more than 3 categories
                 if (budgetAdherence.categoryAdherences.size > 3) {
                     TextButton(
                         onClick = onNavigateToBudget,
@@ -312,7 +451,6 @@ fun BudgetItemFromData(categoryAdherence: CategoryAdherence) {
                     color = color
                 )
 
-                // Show trend if available
                 if (categoryAdherence.spendingTrend != SpendingTrend.NO_DATA) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -344,7 +482,7 @@ fun BudgetItemFromData(categoryAdherence: CategoryAdherence) {
     }
 }
 
-// Helper functions - renamed to avoid conflicts
+// Helper functions
 private fun getBudgetCategoryIcon(category: String): ImageVector {
     return when (category.uppercase()) {
         "DINING" -> Icons.Default.Restaurant
@@ -379,7 +517,6 @@ private fun getBudgetStatusText(categoryAdherence: CategoryAdherence): String {
     }
 }
 
-// Keep existing components unchanged
 @Composable
 fun AccountCard(account: Account) {
     Card(
@@ -461,7 +598,6 @@ fun AccountCard(account: Account) {
                     )
                 }
 
-                // Card Number Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -484,122 +620,34 @@ fun AccountCard(account: Account) {
     }
 }
 
-@Composable
-fun MoneyFlowSection() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        MoneyFlowCard(
-            modifier = Modifier.weight(1f),
-            icon = Icons.Default.ArrowDownward,
-            label = "Money In",
-            amount = "$5,240",
-            percentage = "+12%",
-            color = SuccessGreen
-        )
-        MoneyFlowCard(
-            modifier = Modifier.weight(1f),
-            icon = Icons.Default.ArrowUpward,
-            label = "Money Out",
-            amount = "$3,180",
-            percentage = "+8%",
-            color = Color.Red
-        )
-        MoneyFlowCard(
-            modifier = Modifier.weight(1f),
-            icon = Icons.Default.Savings,
-            label = "Saved",
-            amount = "$2,060",
-            percentage = "+15%",
-            color = PrimaryBlue,
-            percentageColor = SuccessGreen
-        )
-    }
-}
-
-@Composable
-fun MoneyFlowCard(
-    modifier: Modifier = Modifier,
-    icon: ImageVector,
-    label: String,
-    amount: String,
-    percentage: String,
-    color: Color,
-    percentageColor: Color = color
-) {
-    Card(
-        modifier = modifier.shadow(2.dp, RoundedCornerShape(8.dp)),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(color.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-            Text(
-                label,
-                fontSize = 12.sp,
-                color = TextSecondary
-            )
-            Text(
-                amount,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = color
-            )
-            Text(
-                percentage,
-                fontSize = 12.sp,
-                color = percentageColor
-            )
-        }
-    }
-}
-
-@Composable
-fun FinancialInsights() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(
-            "Financial Insights",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = TextPrimary
-        )
-
-        InsightDetailCard(
-            icon = Icons.Default.TrendingUp,
-            title = "Excellent Savings Rate",
-            description = "You're saving 39% of your income this month - well above the recommended 20%!",
-            progress = 0.39f,
-            progressText = "39%",
-            color = SuccessGreen
-        )
-
-        InsightDetailCard(
-            icon = Icons.Default.PieChart,
-            title = "Spending Pattern Analysis",
-            description = "Your largest expense category is housing (45%), followed by food (22%).",
-            actionText = "View detailed breakdown →",
-            color = PrimaryBlue
-        )
-    }
-}
+//@Composable
+//fun FinancialInsights() {
+//    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+//        Text(
+//            "Financial Insights",
+//            fontSize = 18.sp,
+//            fontWeight = FontWeight.SemiBold,
+//            color = TextPrimary
+//        )
+//
+//        InsightDetailCard(
+//            icon = Icons.Default.TrendingUp,
+//            title = "Excellent Savings Rate",
+//            description = "You're saving 39% of your income this month - well above the recommended 20%!",
+//            progress = 0.39f,
+//            progressText = "39%",
+//            color = SuccessGreen
+//        )
+//
+//        InsightDetailCard(
+//            icon = Icons.Default.PieChart,
+//            title = "Spending Pattern Analysis",
+//            description = "Your largest expense category is housing (45%), followed by food (22%).",
+//            actionText = "View detailed breakdown →",
+//            color = PrimaryBlue
+//        )
+//    }
+//}
 
 @Composable
 fun InsightDetailCard(

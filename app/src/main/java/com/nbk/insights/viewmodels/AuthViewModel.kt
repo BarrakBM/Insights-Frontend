@@ -51,7 +51,7 @@ class AuthViewModel(
                     _user.value = response.body()
                     Log.i(TAG, "Fetched user successfully: ${_user.value}")
                 } else {
-                    val errorMessage = "Session invalid: ${response.message()}"
+                    val errorMessage = response.message()
                     Log.w(TAG, errorMessage)
                     setError(errorMessage)
                     tokenManager.clearToken()

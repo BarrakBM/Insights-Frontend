@@ -110,34 +110,31 @@ fun BudgetManagementScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Budget Management",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
+            AppHeaderWithBack(
+                title = "Budget Management",
+                onBackClick = { navController.popBackStack() },
+                action = {
+                    // Add button
+                    IconButton(
+                        onClick = { showBudgetDialog = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(PrimaryBlue.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add Budget",
+                                tint = PrimaryBlue,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
-                },
-                actions = {
-                    IconButton(onClick = { showBudgetDialog = true }) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "Add Budget",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
+                }
             )
         }
     ) { paddingValues ->
