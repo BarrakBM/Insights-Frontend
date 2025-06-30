@@ -120,7 +120,7 @@ fun BudgetLimitItem(
         Spacer(modifier = Modifier.height(8.dp))
 
         LinearProgressIndicator(
-            progress = progress.coerceAtMost(1f),
+            progress = { progress.coerceAtMost(1f) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
@@ -130,7 +130,7 @@ fun BudgetLimitItem(
                 isNearLimit -> Color(0xFFF59E0B)
                 else -> budget.color
             },
-            trackColor = Color(0xFFF3F4F6)
+            trackColor = Color(0xFFF3F4F6),
         )
     }
 }
