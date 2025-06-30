@@ -42,6 +42,7 @@ fun InsightsApp() {
     val routesWithMainLayout = listOf(
         Screen.Home2.route,
         Screen.Insights2.route,
+        Screen.Explore.route, // Add Explore to routes with MainLayout
         Screen.RecurringPayments.route
     )
 
@@ -52,6 +53,7 @@ fun InsightsApp() {
             selectedTab = when (currentRoute) {
                 Screen.Home2.route -> "Home"
                 Screen.Insights2.route -> "Insights"
+                Screen.Explore.route -> "Explore" // Add Explore tab mapping
                 Screen.RecurringPayments.route -> "Recurring"
                 else -> "Home"
             },

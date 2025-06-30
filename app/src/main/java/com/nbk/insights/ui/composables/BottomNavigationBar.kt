@@ -24,6 +24,7 @@ fun BottomNavigationBar(
     val items = listOf(
         BottomNavBarDTO("Home", Icons.Default.Home, "home2"),
         BottomNavBarDTO("Insights", Icons.Default.PieChart, "insights2"),
+        BottomNavBarDTO("Explore", Icons.Default.Explore, "explore"), // New Explore tab
         BottomNavBarDTO("Recurring", Icons.Default.Refresh, "recurring_payments"),
     )
 

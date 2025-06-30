@@ -100,6 +100,15 @@ fun AppNavigation(
             currentRoute = Screen.RecurringPayments.route
         }
 
+        /* ─── EXPLORE (cross-fade) ─── */
+        composable(Screen.Explore.route,
+            enterTransition = { crossFadeIn() },
+            exitTransition  = { crossFadeOut() }
+        ) {
+            ExploreScreen(navController, paddingValues)
+            currentRoute = Screen.Explore.route
+        }
+
         /* ─── Screens with MainLayout ─── */
         composable(Screen.Home2.route) {
             HomeScreen2(navController, paddingValues)
