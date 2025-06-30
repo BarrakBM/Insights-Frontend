@@ -17,12 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.nbk.insights.data.dtos.OfferBrief
 import com.nbk.insights.data.dtos.OfferResponse
 import com.nbk.insights.ui.theme.*
@@ -138,8 +141,6 @@ fun ExploreScreen(navController: NavController, paddingValues: PaddingValues) {
                         }
                     }
                 }
-
-
 
                 // Error state
                 errorMessage?.let { error ->
@@ -330,19 +331,49 @@ fun RelevantOfferCard(offer: OfferBrief) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Background Image (placeholder for now)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        // Placeholder gradient - replace with actual image
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                NBKBlue.copy(alpha = 0.3f),
-                                NBKBlue.copy(alpha = 0.1f)
-                            )
+            // Background Image with SubcomposeAsyncImage for better loading states
+            SubcomposeAsyncImage(
+                model = offer.imageUrl,
+                contentDescription = offer.description,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                loading = {
+                    // Loading state
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        NBKBlue.copy(alpha = 0.3f),
+                                        NBKBlue.copy(alpha = 0.1f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = NBKBlue,
+                            strokeWidth = 2.dp
                         )
+                    }
+                },
+                error = {
+                    // Error or no image fallback
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        NBKBlue.copy(alpha = 0.3f),
+                                        NBKBlue.copy(alpha = 0.1f)
+                                    )
+                                )
+                            )
                     )
+                }
             )
 
             // Gradient overlay for text readability
@@ -353,8 +384,8 @@ fun RelevantOfferCard(offer: OfferBrief) {
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.White.copy(alpha = 0.9f),
-                                Color.White
+                                Color.Black.copy(alpha = 0.75f),
+                                Color.Black.copy(alpha = 0.6f)
                             ),
                             startY = 0f,
                             endY = Float.POSITIVE_INFINITY
@@ -378,14 +409,14 @@ fun RelevantOfferCard(offer: OfferBrief) {
                         offer.description,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.Black,
+                        color = Color.White,
                         maxLines = 2
                     )
                     offer.subCategory?.let { subCategory ->
                         Text(
                             subCategory,
                             fontSize = 12.sp,
-                            color = NBKBlue,
+                            color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
@@ -398,7 +429,7 @@ fun RelevantOfferCard(offer: OfferBrief) {
                     Icon(
                         Icons.Default.ArrowForward,
                         contentDescription = "View offer",
-                        tint = NBKBlue,
+                        tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -423,19 +454,49 @@ fun CategoryOfferCard(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Background Image (placeholder for now)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        // Placeholder gradient - replace with actual image
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                categoryColor.copy(alpha = 0.3f),
-                                categoryColor.copy(alpha = 0.1f)
-                            )
+            // Background Image with SubcomposeAsyncImage
+            SubcomposeAsyncImage(
+                model = offer.imageUrl,
+                contentDescription = offer.description,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                loading = {
+                    // Loading state
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        categoryColor.copy(alpha = 0.3f),
+                                        categoryColor.copy(alpha = 0.1f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = categoryColor,
+                            strokeWidth = 2.dp
                         )
+                    }
+                },
+                error = {
+                    // Error or no image fallback
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        categoryColor.copy(alpha = 0.3f),
+                                        categoryColor.copy(alpha = 0.1f)
+                                    )
+                                )
+                            )
                     )
+                }
             )
 
             // Gradient overlay for text readability
@@ -446,8 +507,8 @@ fun CategoryOfferCard(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.White.copy(alpha = 0.9f),
-                                Color.White
+                                Color.Black.copy(alpha = 0.75f),
+                                Color.Black.copy(alpha = 0.6f)
                             ),
                             startY = 0f,
                             endY = Float.POSITIVE_INFINITY
@@ -466,13 +527,25 @@ fun CategoryOfferCard(
                 Spacer(modifier = Modifier.weight(1f))
 
                 // Bottom content
-                Text(
-                    offer.description,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black,
-                    maxLines = 2
-                )
+                Column {
+                    Text(
+                        offer.description,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White,
+                        maxLines = 2
+                    )
+
+                    // Show subcategory if available
+                    offer.subCategory?.let { subCategory ->
+                        Text(
+                            subCategory,
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -481,7 +554,7 @@ fun CategoryOfferCard(
                     Icon(
                         Icons.Default.ArrowForward,
                         contentDescription = "View offer",
-                        tint = categoryColor,
+                        tint = Color.White,
                         modifier = Modifier.size(18.dp)
                     )
                 }
