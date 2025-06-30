@@ -65,6 +65,7 @@ dependencies {
     //implementation (libs.material3)
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))  // 1.6.x APIs
     implementation("androidx.compose.animation:animation")
+    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation (libs.accompanist.navigation.animation)
     implementation(libs.androidx.material3.android)
     testImplementation(libs.junit)
