@@ -253,18 +253,6 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
                     isLoadingRecurring = transactionViewModel.isLoading.value
                 )
             }
-
-            item {
-                BudgetProgressWithData(
-                    budgetAdherence = budgetAdherence,
-                    recommendations = recommendations,
-                    isLoading = accountLoading,
-                    isLoadingRecommendations = recommendationsLoading,
-                    onNavigateToBudget = {
-                        navController.navigate("budget_management")
-                    }
-                )
-            }
         }
     }
 }
