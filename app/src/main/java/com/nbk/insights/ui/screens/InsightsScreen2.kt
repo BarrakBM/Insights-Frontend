@@ -50,11 +50,20 @@ import com.nbk.insights.utils.AppInitializer
 import com.nbk.insights.viewmodels.AccountsViewModel
 import java.math.RoundingMode
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import com.nbk.insights.ui.composables.RecentTransactions2
+import com.nbk.insights.ui.composables.RecurringPayments
+import com.nbk.insights.ui.composables.TransactionsAndRecurringCard
 import com.nbk.insights.viewmodels.TransactionsViewModel
 import java.math.BigDecimal
 
 @Composable
-fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues, accountId: Long? = null) {
+fun InsightsScreen2(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    accountId: Long? = null
+) {
     val activity = LocalActivity.current as ComponentActivity
     val accountsViewModel: AccountsViewModel = viewModel(
         viewModelStoreOwner = activity,
@@ -65,6 +74,13 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues, 
         viewModelStoreOwner = activity,
         factory = remember { AppInitializer.provideTransactionsViewModelFactory(activity) }
     )
+
+    val recentTxs by transactionViewModel.accountTransactions
+    val totalTx = recentTxs?.size ?: 0
+    var shownCount by remember { mutableIntStateOf(4) }
+    val visibleTx = recentTxs.orEmpty().take(shownCount)
+
+    val recurringPayments by transactionViewModel.recurringPayments
 
     val account by accountsViewModel.selectedAccount
     val accountsResponse by accountsViewModel.accounts
@@ -94,6 +110,11 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues, 
 
     LaunchedEffect(account?.accountId) {
         account?.let { selectedAccount ->
+            shownCount = 4
+            transactionViewModel.clearAccountTransactions()
+            transactionViewModel.fetchAccountTransactions(selectedAccount.accountId)
+
+            transactionViewModel.detectRecurringPayments(selectedAccount.accountId)
             if (!cashFlowCache.containsKey(selectedAccount.accountId)) {
                 transactionViewModel.fetchThisMonthAccount(selectedAccount.accountId)
             } else {
@@ -125,13 +146,15 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues, 
                 }
             } else {
                 // Fallback when no accounts are loaded
-                AccountCard(account = Account(
-                    accountId = 0L,
-                    accountType = AccountType.MAIN,
-                    accountNumber = "xxxxxxxxx",
-                    balance = BigDecimal.ZERO,
-                    cardNumber = "xxxxxxxxx"
-                ))
+                AccountCard(
+                    account = Account(
+                        accountId = 0L,
+                        accountType = AccountType.MAIN,
+                        accountNumber = "xxxxxxxxx",
+                        balance = BigDecimal.ZERO,
+                        cardNumber = "xxxxxxxxx"
+                    )
+                )
             }
         }
 
@@ -139,6 +162,17 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues, 
             MoneyFlowSection(
                 cashFlow = thisMonthCashFlow,
                 isLoading = transactionLoading
+            )
+        }
+        item {
+            TransactionsAndRecurringCard(
+                navController = navController,
+                visibleTx = visibleTx,
+                totalTx = totalTx,
+                shownCount = shownCount,
+                onShownCountChange = { shownCount = it },
+                recurringPayments = recurringPayments,
+                isLoadingRecurring = transactionViewModel.isLoading.value
             )
         }
 
@@ -155,7 +189,6 @@ fun InsightsScreen2(navController: NavController, paddingValues: PaddingValues, 
         }
 
         item { SmartRecommendations() }
-        item { RecurringTransactions() }
     }
 }
 
@@ -425,14 +458,21 @@ fun BudgetItemFromData(categoryAdherence: CategoryAdherence) {
                 }
                 Text(
                     "KD ${categoryAdherence.spentAmount.setScale(3, RoundingMode.HALF_UP)} / " +
-                            "KD ${categoryAdherence.budgetAmount.setScale(3, RoundingMode.HALF_UP)}",
+                            "KD ${
+                                categoryAdherence.budgetAmount.setScale(
+                                    3,
+                                    RoundingMode.HALF_UP
+                                )
+                            }",
                     fontSize = 12.sp,
                     color = TextSecondary
                 )
             }
 
             LinearProgressIndicator(
-                progress = { (categoryAdherence.percentageUsed / 100f).coerceIn(0.0, 1.0).toFloat() },
+                progress = {
+                    (categoryAdherence.percentageUsed / 100f).coerceIn(0.0, 1.0).toFloat()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
