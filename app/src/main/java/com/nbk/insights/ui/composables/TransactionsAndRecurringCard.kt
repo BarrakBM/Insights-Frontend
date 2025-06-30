@@ -39,9 +39,7 @@ fun TransactionsAndRecurringCard(
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(16.dp))
-            .padding(horizontal = 10.dp),
+            .fillMaxWidth(), // Removed shadow and padding to match budget card
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
