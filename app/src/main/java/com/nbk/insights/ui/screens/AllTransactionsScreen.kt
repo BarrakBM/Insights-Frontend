@@ -28,6 +28,10 @@ import com.nbk.insights.viewmodels.TransactionsViewModel
 import com.nbk.insights.ui.theme.*
 import java.time.LocalDateTime
 import kotlin.math.abs
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.outlined.Notifications
+import com.nbk.insights.ui.composables.AppHeaderWithBack
 
 @SuppressLint("DefaultLocale", "ContextCastToActivity")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,25 +100,9 @@ fun AllTransactionsScreen(
     /* ---------------- UI ---------------- */
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (accountId != null) "Account Transactions" else "All Transactions",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NBKBlue)
+            AppHeaderWithBack(
+                title = if (accountId != null) "Account Transactions" else "All Transactions",
+                onBackClick = { navController.popBackStack() }
             )
         }
     ) { paddingValues ->
@@ -179,3 +167,4 @@ fun AllTransactionsScreen(
         }
     }
 }
+

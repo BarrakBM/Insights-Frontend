@@ -1,4 +1,4 @@
-package com.nbk.insights.ui.utils
+package com.nbk.insights.utils
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
