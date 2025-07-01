@@ -95,6 +95,11 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
 
     val pagerState = rememberPagerState(pageCount = { accountsList.size })
 
+    var isManualRefreshing by remember { mutableStateOf(false) }
+
+// Change the PullToRefreshBox isRefreshing to:
+    val isRefreshing = isManualRefreshing
+
     LaunchedEffect(Unit) {
         if (accountsViewModel.accounts.value == null) {
             accountsViewModel.fetchUserAccounts()
@@ -134,9 +139,11 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
     }
 
     PullToRefreshBox(
-        isRefreshing = transactionViewModel.isLoading.value || accountsViewModel.isLoading.value,
+        isRefreshing = isManualRefreshing,
         onRefresh = {
             coroutineScope.launch {
+                isManualRefreshing = true
+
                 shownCount = 4
                 transactionViewModel.clearAccountTransactions()
                 transactionViewModel.clearCache()
@@ -149,6 +156,10 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
                 accountsViewModel.fetchSpendingTrends()
 
                 recommendationsViewModel.fetchCategoryRecommendations()
+
+                // Wait a bit for operations to complete
+                kotlinx.coroutines.delay(500)
+                isManualRefreshing = false
             }
         },
         state = pullState,
