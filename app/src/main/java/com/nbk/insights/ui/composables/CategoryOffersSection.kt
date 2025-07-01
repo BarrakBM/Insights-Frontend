@@ -16,7 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +37,9 @@ fun CategoryOffersSection(
     val categoryIcon = getCategoryIcons(category)
     val categoryColor = getCategoryColors(category)
 
+    // Create gradient colors for the category header icon
+    val gradientColors = createCategoryGradient(categoryColor)
+
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -44,18 +48,21 @@ fun CategoryOffersSection(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Category header icon with subtle light background and colored icon
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(categoryColor.copy(alpha = 0.1f)),
+                    .size(48.dp)
+                    .background(
+                        color = categoryColor.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     categoryIcon,
                     contentDescription = null,
-                    tint = categoryColor,
-                    modifier = Modifier.size(20.dp)
+                    tint = gradientColors[1], // Use the darker gradient color for the icon
+                    modifier = Modifier.size(26.dp)
                 )
             }
             Column {
@@ -85,4 +92,17 @@ fun CategoryOffersSection(
             }
         }
     }
+}
+
+// Helper function to create gradient colors for each category
+private fun createCategoryGradient(baseColor: Color): List<Color> {
+    // Create a darker version of the base color for gradient effect
+    val darkerColor = Color(
+        red = (baseColor.red * 0.8f).coerceIn(0f, 1f),
+        green = (baseColor.green * 0.8f).coerceIn(0f, 1f),
+        blue = (baseColor.blue * 0.8f).coerceIn(0f, 1f),
+        alpha = baseColor.alpha
+    )
+
+    return listOf(baseColor, darkerColor)
 }

@@ -15,6 +15,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Coffee
+import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,139 +30,121 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.nbk.insights.data.dtos.OfferResponse
+import com.nbk.insights.ui.theme.TextPrimary
+import com.nbk.insights.ui.theme.TextSecondary
 
 @Composable
 fun CategoryOfferCard(
     offer: OfferResponse,
     categoryColor: Color
 ) {
+    // Create gradient colors for the category
+    val gradientColors = createCategoryGradient(categoryColor)
+
     Card(
         modifier = Modifier
             .width(240.dp)
             .height(100.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Background Image with SubcomposeAsyncImage
-            SubcomposeAsyncImage(
-                model = offer.imageUrl,
-                contentDescription = offer.description,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                loading = {
-                    // Loading state
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        categoryColor.copy(alpha = 0.3f),
-                                        categoryColor.copy(alpha = 0.1f)
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = categoryColor,
-                            strokeWidth = 2.dp
-                        )
-                    }
-                },
-                error = {
-                    // Error or no image fallback
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        categoryColor.copy(alpha = 0.3f),
-                                        categoryColor.copy(alpha = 0.1f)
-                                    )
-                                )
-                            )
-                    )
-                }
-            )
-
-            // 🎛️ DIAL 1: Gradient Overlay Strength
+            // Category Icon with gradient background
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.85f), // 🎛️ DIAL: Increase for darker overlay (0.5f to 0.9f)
-                                Color.Black.copy(alpha = 0.7f)   // 🎛️ DIAL: Bottom opacity (0.6f to 0.95f)
-                            ),
-                            startY = 0f,
-                            endY = Float.POSITIVE_INFINITY
+                        brush = Brush.linearGradient(
+                            colors = gradientColors
                         )
-                    )
-            )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    getCategoryIcon(offer.subCategory ?: "Other"),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
 
             // Content
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                // Top spacer to push content to bottom
-                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    offer.description,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 16.sp
+                )
 
-                // Bottom content
-                Column {
+                offer.subCategory?.let { subCategory ->
                     Text(
-                        offer.description,
-                        fontSize = 16.sp,                    // 🎛️ DIAL 2: Main text size (14sp to 18sp)
-                        fontWeight = FontWeight.Bold,        // 🎛️ DIAL 3: Font weight (Medium/SemiBold/Bold/ExtraBold)
-                        color = Color.White,
-                        maxLines = 2
-                    )
-
-                    // Show subcategory if available
-                    offer.subCategory?.let { subCategory ->
-                        Text(
-                            subCategory,
-                            fontSize = 13.sp,                       // 🎛️ DIAL 4: Subtitle size (11sp to 15sp)
-                            fontWeight = FontWeight.SemiBold,       // 🎛️ DIAL 5: Subtitle weight (Normal/Medium/SemiBold/Bold)
-                            color = Color.White.copy(alpha = 0.9f), // 🎛️ DIAL 6: Subtitle opacity (0.7f to 1.0f)
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Icon(
-                        Icons.Default.ArrowForward,
-                        contentDescription = "View offer",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        subCategory,
+                        fontSize = 11.sp,
+                        color = TextSecondary
                     )
                 }
             }
+
+            // Arrow icon with gradient color
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = "View offer",
+                tint = gradientColors[1], // Use the darker color from gradient
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
+}
+
+// Helper function to get appropriate icon
+private fun getCategoryIcon(subCategory: String): ImageVector {
+    return when (subCategory.lowercase()) {
+        "coffee", "cafe" -> Icons.Default.Coffee
+        "restaurant", "dining" -> Icons.Default.Restaurant
+        "shopping", "retail" -> Icons.Default.ShoppingBag
+        "grocery", "supermarket" -> Icons.Default.ShoppingCart
+        "entertainment", "movie" -> Icons.Default.Movie
+        else -> Icons.Default.LocalOffer
+    }
+}
+
+// Helper function to create gradient colors for each category
+private fun createCategoryGradient(baseColor: Color): List<Color> {
+    // Create a darker version of the base color for gradient effect
+    val darkerColor = Color(
+        red = (baseColor.red * 0.8f).coerceIn(0f, 1f),
+        green = (baseColor.green * 0.8f).coerceIn(0f, 1f),
+        blue = (baseColor.blue * 0.8f).coerceIn(0f, 1f),
+        alpha = baseColor.alpha
+    )
+
+    return listOf(baseColor, darkerColor)
 }
 
 // 🎛️ READABILITY DIAL REFERENCE:
