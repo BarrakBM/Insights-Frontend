@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,7 +66,11 @@ fun LoginScreen(navController: NavController) {
             /* Gradient wallpaper */
             .background(
                 Brush.verticalGradient(
-                    listOf(NBKBlue, NBKBlue.copy(alpha = 0.6f), DarkBackground)
+                    listOf(
+                        Color(0xFF4472C4), // Primary blue from app
+                        Color(0xFF4472C4).copy(alpha = 0.8f),
+                        Color(0xFFF5F5F5) // Light background
+                    )
                 )
             )
     ) {
@@ -74,7 +79,7 @@ fun LoginScreen(navController: NavController) {
             modifier = Modifier
                 .align(Alignment.Center)
                 .clip(RoundedCornerShape(32.dp))
-                .background(Color.White.copy(alpha = 0.12f))
+                .background(Color.White.copy(alpha = 0.95f))
                 .padding(32.dp)
                 .widthIn(max = 420.dp)
         ) {
@@ -83,31 +88,34 @@ fun LoginScreen(navController: NavController) {
             Image(
                 painter = painterResource(R.drawable.insights_plus_logo),
                 contentDescription = "Insights+ logo",
-                colorFilter = ColorFilter.tint(            // 👈  turn it solid white
-                    Color.White,
-                    BlendMode.SrcIn                       // keeps the alpha of original icon
+                colorFilter = ColorFilter.tint(
+                    Color(0xFF4472C4), // Primary blue for logo
+                    BlendMode.SrcIn
                 ),
                 modifier = Modifier
-                    .size(160.dp)                // bigger logo
+                    .size(160.dp)
                     .align(Alignment.CenterHorizontally)
             )
 
+            Spacer(Modifier.height(32.dp))
 
             /* ───── Email ───── */
             OutlinedTextField(
                 value         = email,
                 onValueChange = { email = it },
-                placeholder   = { Text("Username", color = Color.Gray) },
+                placeholder   = { Text("Username", color = Color(0xFF666666)) },
                 modifier      = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape  = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor      = Color.White,
-                    unfocusedBorderColor    = Color.LightGray.copy(alpha = 0.6f),
-                    focusedContainerColor   = LightBackground.copy(alpha = 0.25f),
-                    unfocusedContainerColor = LightBackground.copy(alpha = 0.25f),
-                    cursorColor             = Color.White
+                    focusedBorderColor      = Color(0xFF4472C4),
+                    unfocusedBorderColor    = Color(0xFFE0E0E0),
+                    focusedContainerColor   = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    cursorColor             = Color(0xFF4472C4),
+                    focusedTextColor        = Color(0xFF333333),
+                    unfocusedTextColor      = Color(0xFF333333)
                 )
             )
 
@@ -117,18 +125,20 @@ fun LoginScreen(navController: NavController) {
             OutlinedTextField(
                 value         = password,
                 onValueChange = { password = it },
-                placeholder   = { Text("Password", color = Color.Gray) },
+                placeholder   = { Text("Password", color = Color(0xFF666666)) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier      = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape  = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor      = Color.White,
-                    unfocusedBorderColor    = Color.LightGray.copy(alpha = 0.6f),
-                    focusedContainerColor   = LightBackground.copy(alpha = 0.25f),
-                    unfocusedContainerColor = LightBackground.copy(alpha = 0.25f),
-                    cursorColor             = Color.White
+                    focusedBorderColor      = Color(0xFF4472C4),
+                    unfocusedBorderColor    = Color(0xFFE0E0E0),
+                    focusedContainerColor   = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    cursorColor             = Color(0xFF4472C4),
+                    focusedTextColor        = Color(0xFF333333),
+                    unfocusedTextColor      = Color(0xFF333333)
                 )
             )
 
@@ -140,9 +150,16 @@ fun LoginScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors  = ButtonDefaults.buttonColors(containerColor = NBKBlue),
+                colors  = ButtonDefaults.buttonColors(containerColor = Color(0xFF4472C4)),
                 shape   = RoundedCornerShape(28.dp)
-            ) { Text("Login", color = Color.White, fontSize = 16.sp) }
+            ) {
+                Text(
+                    "Login",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -153,16 +170,26 @@ fun LoginScreen(navController: NavController) {
                     .fillMaxWidth()
                     .height(56.dp),
                 shape  = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f))   // ← fixed
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color(0xFF4472C4)
+                ),
+                border = BorderStroke(1.dp, Color(0xFF4472C4))
             ) {
-                Text("Dummy Login (Test)", fontSize = 16.sp)
+                Text(
+                    "Dummy Login (Test)",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
 
             /* ───── Error ───── */
             if (!errorMessage.isNullOrBlank()) {
                 Spacer(Modifier.height(12.dp))
-                Text(errorMessage!!, color = Red, modifier = Modifier.align(Alignment.CenterHorizontally))
+                Text(
+                    errorMessage!!,
+                    color = Color(0xFFE53E3E),
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -170,7 +197,7 @@ fun LoginScreen(navController: NavController) {
             /* ───── Sign-up link ───── */
             Text(
                 text     = "Don't have an account? Sign up",
-                color    = Color.White,
+                color    = Color(0xFF4472C4),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .clickable { navController.navigate(Screen.Register.route) }
