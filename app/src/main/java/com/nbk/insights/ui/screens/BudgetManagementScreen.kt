@@ -1,9 +1,6 @@
 package com.nbk.insights.ui.screens
 
 import android.util.Log
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -51,7 +49,6 @@ fun BudgetManagementScreen(
     val accounts by accountsViewModel.accounts
     val accountLimits by accountsViewModel.accountLimits
 
-    // State
     var showBudgetDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedCategoryAdherence by remember { mutableStateOf<CategoryAdherence?>(null) }
@@ -61,43 +58,36 @@ fun BudgetManagementScreen(
     val isLoading by accountsViewModel.isLoading
     val errorMessage by accountsViewModel.errorMessage
 
-    // Fetch data on load
     LaunchedEffect(Unit) {
         accountsViewModel.fetchBudgetAdherence()
         accountsViewModel.fetchSpendingTrends()
         accountsViewModel.fetchUserAccounts()
     }
 
-    // Fetch account limits when selected account changes
     LaunchedEffect(selectedAccount) {
         selectedAccount?.accountId?.let { accountId ->
             accountsViewModel.fetchAccountLimits(accountId)
         }
     }
 
-    // Auto-select first account if none selected
     LaunchedEffect(accounts) {
         if (selectedAccount == null && accounts?.accounts?.isNotEmpty() == true) {
             accounts!!.accounts.first()?.let { accountsViewModel.setSelectedAccount(it) }
         }
     }
 
-    // Helper function to find limit ID by category (FIXED: use accountLimits instead of limits)
     fun findLimitIdByCategory(category: String): Long? {
         return accountLimits?.accountLimits?.find {
             it?.category?.equals(category, ignoreCase = true) == true
         }?.limitId
     }
 
-    // Helper function to check if budget exists for category
     fun budgetExistsForCategory(category: String): Boolean {
         return findLimitIdByCategory(category) != null
     }
 
-    // Handle budget creation
     fun createBudget(category: Category, amount: BigDecimal, renewsAt: String) {
         val accountId = selectedAccount?.accountId ?: 0L
-
         val request = LimitsRequest(
             category = category.name,
             amount = amount,
@@ -114,7 +104,6 @@ fun BudgetManagementScreen(
                 title = "Budget Management",
                 onBackClick = { navController.popBackStack() },
                 action = {
-                    // Add button
                     IconButton(
                         onClick = { showBudgetDialog = true },
                         modifier = Modifier.size(32.dp)
@@ -149,6 +138,7 @@ fun BudgetManagementScreen(
                     CircularProgressIndicator(color = NBKBlue)
                 }
             }
+
             errorMessage != null -> {
                 Box(
                     modifier = Modifier
@@ -190,6 +180,7 @@ fun BudgetManagementScreen(
                     }
                 }
             }
+
             else -> {
                 LazyColumn(
                     modifier = Modifier
@@ -199,12 +190,12 @@ fun BudgetManagementScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Overall Budget Summary
                     item {
-                        BudgetSummaryCard(budgetAdherence)
+                        if (!isLoading && budgetAdherence != null) {
+                            BudgetSummaryCard(budgetAdherence)
+                        }
                     }
 
-                    // Category Budgets
                     if (budgetAdherence?.categoryAdherences?.isNotEmpty() == true) {
                         item {
                             Text(
@@ -225,13 +216,13 @@ fun BudgetManagementScreen(
                                 }
                             )
                         }
-                    } else {
+                    } else if (!isLoading && budgetAdherence?.categoryAdherences?.isEmpty() == true) {
+                        // ✅ FIXED: Only show empty state if not loading and list is confirmed empty
                         item {
                             EmptyBudgetState(onCreateBudget = { showBudgetDialog = true })
                         }
                     }
 
-                    // Spending Trends
                     if (!spendingTrends.isNullOrEmpty()) {
                         item {
                             Text(
@@ -252,7 +243,6 @@ fun BudgetManagementScreen(
         }
     }
 
-    // Budget Creation Dialog
     if (showBudgetDialog) {
         BudgetLimitDialog(
             onDismiss = { showBudgetDialog = false },
@@ -262,16 +252,11 @@ fun BudgetManagementScreen(
         )
     }
 
-    // Budget Edit/Remove Dialog
-    // Replace your Budget Edit/Remove Dialog section with this:
-
-// Budget Edit/Remove Dialog
     if (showEditDialog && selectedCategoryAdherence != null) {
         BudgetEditDialog(
             categoryAdherence = selectedCategoryAdherence!!,
             onDismiss = { showEditDialog = false },
             onEdit = { category, amount, renewsAt ->
-                // Handle budget edit - find limit ID and update properly
                 val limitId = findLimitIdByCategory(selectedCategoryAdherence!!.category)
                 val accountId = selectedAccount?.accountId ?: 0L
 
@@ -283,16 +268,13 @@ fun BudgetManagementScreen(
                 )
 
                 if (limitId != null) {
-                    // Update existing budget
                     accountsViewModel.updateAccountLimit(limitId, request)
                 } else {
-                    // Fallback: create new budget (shouldn't happen in edit mode)
                     accountsViewModel.setAccountLimit(request)
                 }
                 showEditDialog = false
             },
             onRemove = {
-                // Find the actual limit ID by category
                 val limitId = findLimitIdByCategory(selectedCategoryAdherence!!.category)
                 if (limitId != null) {
                     accountsViewModel.deactivateLimit(limitId)
@@ -304,6 +286,7 @@ fun BudgetManagementScreen(
         )
     }
 }
+
 
 
 // Replace the BudgetEditDialog in your BudgetManagementScreen.kt with this corrected version:
@@ -981,7 +964,7 @@ private fun getCategoryColor(category: String): Color {
     }
 }
 
-private fun getCategoryIcon(category: String): androidx.compose.ui.graphics.vector.ImageVector {
+private fun getCategoryIcon(category: String): ImageVector {
     return when (category.uppercase()) {
         "DINING" -> Icons.Default.Restaurant
         "SHOPPING" -> Icons.Default.ShoppingBag
