@@ -68,10 +68,9 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
     var isBalanceVisible by remember { mutableStateOf(false) }
 
     val pullState = rememberPullToRefreshState()
+    var isManualRefreshing by remember { mutableStateOf(false) }
 
-    val isRefreshing = txVM.isRefreshing.value ||
-            accountsVM.isRefreshing.value ||
-            recommendationsVM.isRefreshing.value
+    val isRefreshing = isManualRefreshing
 
     LaunchedEffect(Unit) {
         if (accountsVM.accounts.value == null) {
@@ -97,6 +96,7 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
         isRefreshing = isRefreshing,
         onRefresh = {
             coroutineScope.launch {
+                isManualRefreshing = true
                 txVM.fetchUserTransactions(forceRefresh = true)
 
                 launch { accountsVM.fetchUserAccounts() }
@@ -104,6 +104,9 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
                 launch { txVM.fetchLastMonth() }
                 launch { txVM.fetchThisMonth() }
                 launch { recommendationsVM.fetchQuickInsights() }
+
+                kotlinx.coroutines.delay(500)
+                isManualRefreshing = false
             }
         },
         state = pullState,
