@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,130 +31,122 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.nbk.insights.data.dtos.OfferBrief
 import com.nbk.insights.ui.theme.NBKBlue
+import com.nbk.insights.ui.theme.TextPrimary
+import com.nbk.insights.ui.theme.TextSecondary
 
-// IMPROVED RelevantOfferCard with Readability Dials
+// Helper function to create gradient colors for each category
+private fun createCategoryGradient(baseColor: Color): List<Color> {
+    // Create a darker version of the base color for gradient effect
+    val darkerColor = Color(
+        red = (baseColor.red * 0.8f).coerceIn(0f, 1f),
+        green = (baseColor.green * 0.8f).coerceIn(0f, 1f),
+        blue = (baseColor.blue * 0.8f).coerceIn(0f, 1f),
+        alpha = baseColor.alpha
+    )
+
+    return listOf(baseColor, darkerColor)
+}
+
 @Composable
 fun RelevantOfferCard(offer: OfferBrief) {
+    // Create gradient colors for NBK Blue
+    val gradientColors = listOf(NBKBlue, Color(0xFF1976D2))
+
     Card(
         modifier = Modifier
             .width(280.dp)
             .height(120.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Background Image with SubcomposeAsyncImage for better loading states
-            SubcomposeAsyncImage(
-                model = offer.imageUrl,
-                contentDescription = offer.description,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                loading = {
-                    // Loading state
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        NBKBlue.copy(alpha = 0.3f),
-                                        NBKBlue.copy(alpha = 0.1f)
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = NBKBlue,
-                            strokeWidth = 2.dp
-                        )
-                    }
-                },
-                error = {
-                    // Error or no image fallback
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        NBKBlue.copy(alpha = 0.3f),
-                                        NBKBlue.copy(alpha = 0.1f)
-                                    )
-                                )
-                            )
-                    )
-                }
-            )
-
-            // 🎛️ DIAL 1: Gradient Overlay Strength
+            // Icon/Image section
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.85f), // 🎛️ DIAL: Stronger overlay (0.75f → 0.85f)
-                                Color.Black.copy(alpha = 0.7f)   // 🎛️ DIAL: Bottom opacity (0.6f → 0.9f)
-                            ),
-                            startY = 0f,
-                            endY = Float.POSITIVE_INFINITY
+                        brush = Brush.linearGradient(
+                            colors = gradientColors
                         )
-                    )
-            )
-
-            // Content
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                // Top spacer to push content to bottom
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Bottom content
-                Column {
-                    Text(
-                        offer.description,
-                        fontSize = 18.sp,                    // 🎛️ DIAL 2: Main text size (16sp → 18sp)
-                        fontWeight = FontWeight.Bold,        // 🎛️ DIAL 3: Font weight (Medium → Bold)
-                        color = Color.White,
-                        maxLines = 2
+                if (offer.imageUrl != null) {
+                    SubcomposeAsyncImage(
+                        model = offer.imageUrl,
+                        contentDescription = offer.description,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        loading = {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        },
+                        error = {
+                            Icon(
+                                Icons.Default.LocalOffer,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     )
-                    offer.subCategory?.let { subCategory ->
-                        Text(
-                            subCategory,
-                            fontSize = 14.sp,                       // 🎛️ DIAL 4: Subtitle size (12sp → 14sp)
-                            fontWeight = FontWeight.SemiBold,       // 🎛️ DIAL 5: Subtitle weight (added)
-                            color = Color.White.copy(alpha = 0.95f), // 🎛️ DIAL 6: Subtitle opacity (0.9f → 0.95f)
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
+                } else {
                     Icon(
-                        Icons.Default.ArrowForward,
-                        contentDescription = "View offer",
+                        Icons.Default.LocalOffer,
+                        contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
+
+            // Content
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    offer.description,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                offer.subCategory?.let { subCategory ->
+                    Text(
+                        subCategory,
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                }
+            }
+
+            // Arrow
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = "View offer",
+                tint = Color(0xFF1976D2), // Use the exact same darker blue as the star icon
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }

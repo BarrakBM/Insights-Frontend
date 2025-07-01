@@ -99,68 +99,54 @@ fun ExploreScreen(navController: NavController, paddingValues: PaddingValues) {
                 }
             }
 
-            // Loading state (only show if no data is cached)
-            if (isLoading && offersRecommendation == null && allCategoryOffers.isEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = NBKBlue)
-                    }
-                }
-            } else {
-                // Recommendation Message Card
-                offersRecommendation?.message?.let { message ->
-                    item {
-                        RecommendationMessageCard(message = message)
-                    }
-                }
 
-                // Relevant Offers Section
-                offersRecommendation?.offers?.let { offers ->
+            offersRecommendation?.message?.let { message ->
+                item {
+                    RecommendationMessageCard(message = message)
+                }
+            }
+
+            // Relevant Offers Section
+            offersRecommendation?.offers?.let { offers ->
+                if (offers.isNotEmpty()) {
+                    item {
+                        OffersSection(
+                            title = "Recommended for You",
+                            subtitle = "Based on your spending patterns",
+                            offers = offers,
+                            isRelevantOffers = true
+                        )
+                    }
+                }
+            }
+
+            // Category Offers Sections
+            categories.forEach { category ->
+                allCategoryOffers[category]?.let { offers ->
                     if (offers.isNotEmpty()) {
                         item {
-                            OffersSection(
-                                title = "Recommended for You",
-                                subtitle = "Based on your spending patterns",
-                                offers = offers,
-                                isRelevantOffers = true
+                            CategoryOffersSection(
+                                category = category,
+                                offers = offers
                             )
                         }
                     }
                 }
+            }
 
-                // Category Offers Sections
-                categories.forEach { category ->
-                    allCategoryOffers[category]?.let { offers ->
-                        if (offers.isNotEmpty()) {
-                            item {
-                                CategoryOffersSection(
-                                    category = category,
-                                    offers = offers
-                                )
-                            }
-                        }
+            // Error state
+            errorMessage?.let { error ->
+                item {
+                    ErrorCard(error = error) {
+                        recommendationsVM.fetchExploreScreenData(forceRefresh = true)
                     }
                 }
+            }
 
-                // Error state
-                errorMessage?.let { error ->
-                    item {
-                        ErrorCard(error = error) {
-                            recommendationsVM.fetchExploreScreenData(forceRefresh = true)
-                        }
-                    }
-                }
-
-                // Empty state
-                if (!isLoading && offersRecommendation?.offers?.isEmpty() == true && allCategoryOffers.isEmpty()) {
-                    item {
-                        EmptyStateCard()
-                    }
+            // Empty state
+            if (!isLoading && offersRecommendation?.offers?.isEmpty() == true && allCategoryOffers.isEmpty()) {
+                item {
+                    EmptyStateCard()
                 }
             }
         }
