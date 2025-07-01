@@ -39,11 +39,26 @@ fun SpendingViewAllChart(
 
     // Extract spending data by category - you can customize this based on your needs
     val spendingByCategory = displayData?.moneyOutByCategory ?: emptyMap()
-    val spendingValues = if (spendingByCategory.isNotEmpty()) {
-        spendingByCategory.values.map { it.toFloat() }
+
+    // FIXED: Create time-series data instead of using category data
+    // This should represent daily/weekly spending over time, starting from 0
+    val spendingValues = if (displayData != null) {
+        // TODO: Replace this with actual daily/weekly spending data from your API
+        // For now, creating a realistic spending pattern that starts from 0
+        val totalSpent = displayData.moneyOut?.toFloat() ?: 0f
+        // Create a spending progression over the month (30 data points)
+        (0..29).map { day ->
+            when {
+                day == 0 -> 0f // Start from zero
+                day <= 5 -> totalSpent * (day * 0.05f) // Gradual increase in first week
+                day <= 15 -> totalSpent * (0.25f + (day - 5) * 0.03f) // Steady spending
+                day <= 25 -> totalSpent * (0.55f + (day - 15) * 0.025f) // Continued spending
+                else -> totalSpent * (0.8f + (day - 25) * 0.04f) // Final week spending
+            }.coerceAtLeast(0f)
+        }
     } else {
-        // Fallback to sample data if no real data available
-        listOf(300f, 420f, 310f, 350f, 700f, 540f, 560f, 830f, 1250f)
+        // Fallback sample data that starts from 0
+        listOf(0f, 50f, 120f, 180f, 300f, 420f, 510f, 650f, 780f, 920f, 1100f, 1250f)
     }
 
     // Calculate totals
@@ -55,7 +70,8 @@ fun SpendingViewAllChart(
     val dateFormatter = DateTimeFormatter.ofPattern("MMMM yyyy")
     val displayDate = displayData?.from?.format(dateFormatter) ?: "Current Month"
 
-    val maxSpending = spendingValues.maxOrNull()?.times(1.2f) ?: 1400f
+    // Use the maximum value as the chart ceiling
+    val maxSpending = spendingValues.maxOrNull() ?: 1400f
 
     Card(
         modifier = modifier
@@ -84,22 +100,34 @@ fun SpendingViewAllChart(
                     val chartHeight = size.height
                     val chartWidth = size.width
                     val stepX = chartWidth / (spendingValues.size - 1).coerceAtLeast(1)
-                    val maxY = maxSpending
 
                     val path = Path()
                     val fillPath = Path()
 
                     spendingValues.forEachIndexed { index, value ->
                         val x = stepX * index
-                        val y = chartHeight - (value / maxY) * chartHeight
-                        if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                        // Calculate Y position: 0 value = bottom, max value = top
+                        val y = if (maxSpending > 0) {
+                            chartHeight - (value / maxSpending) * chartHeight
+                        } else {
+                            chartHeight
+                        }
+
+                        if (index == 0) {
+                            path.moveTo(x, y)
+                            fillPath.moveTo(x, y)
+                        } else {
+                            path.lineTo(x, y)
+                            fillPath.lineTo(x, y)
+                        }
                     }
 
-                    fillPath.addPath(path)
+                    // Close fill path to bottom (zero line)
                     fillPath.lineTo(size.width, size.height)
                     fillPath.lineTo(0f, size.height)
                     fillPath.close()
 
+                    // Draw gradient fill
                     drawPath(
                         path = fillPath,
                         brush = Brush.verticalGradient(
@@ -107,15 +135,21 @@ fun SpendingViewAllChart(
                         )
                     )
 
+                    // Draw line
                     drawPath(
                         path = path,
                         color = NBKBlue,
                         style = Stroke(width = 4f, cap = StrokeCap.Round)
                     )
 
+                    // Draw points
                     spendingValues.forEachIndexed { index, value ->
                         val x = stepX * index
-                        val y = chartHeight - (value / maxY) * chartHeight
+                        val y = if (maxSpending > 0) {
+                            chartHeight - (value / maxSpending) * chartHeight
+                        } else {
+                            chartHeight
+                        }
                         drawCircle(
                             color = NBKBlue,
                             radius = 6f,
