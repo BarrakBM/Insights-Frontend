@@ -1,14 +1,17 @@
 package com.nbk.insights.ui.screens
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +28,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.nbk.insights.data.dtos.*
@@ -291,193 +297,95 @@ fun BudgetManagementScreen(
 
 // Replace the BudgetEditDialog in your BudgetManagementScreen.kt with this corrected version:
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetEditDialog(
     categoryAdherence: CategoryAdherence,
     onDismiss: () -> Unit,
     onEdit: (Category, BigDecimal, String) -> Unit,
-    onRemove: () -> Unit // Changed: Remove the limitId parameter since it's handled in the parent
+    onRemove: () -> Unit
 ) {
     var showEditForm by remember { mutableStateOf(false) }
     var showRemoveConfirmation by remember { mutableStateOf(false) }
 
     // Edit form states
     var amount by remember { mutableStateOf(categoryAdherence.budgetAmount.toString()) }
-    var renewsAt by remember { mutableStateOf(categoryAdherence.renewsAt.toString()) }
+    var selectedDay by remember { mutableStateOf(categoryAdherence.renewsAt.dayOfMonth) }
+    var expanded by remember { mutableStateOf(false) }
+    var amountError by remember { mutableStateOf(false) }
+
+    val today = LocalDate.now()
+    val currentDay = today.dayOfMonth
+
+    // Calculate the renewal date based on selected day
+    val renewalDate = remember(selectedDay) {
+        val targetDate = if (selectedDay <= currentDay) {
+            today.withDayOfMonth(selectedDay)
+        } else {
+            today.minusMonths(1).withDayOfMonth(
+                minOf(selectedDay, today.minusMonths(1).lengthOfMonth())
+            )
+        }
+        targetDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    }
+
+    // Helper function to validate decimal input
+    fun isValidDecimalInput(input: String): Boolean {
+        if (input.isEmpty()) return true
+        val regex = Regex("^\\d*\\.?\\d{0,3}$")
+        return regex.matches(input)
+    }
+
+    // Calculate percentage for visual indicators
+    val percentageUsed = categoryAdherence.percentageUsed
+    val remainingBudget = categoryAdherence.budgetAmount - categoryAdherence.spentAmount
 
     when {
         showRemoveConfirmation -> {
             AlertDialog(
                 onDismissRequest = { showRemoveConfirmation = false },
+                containerColor = Color.White,
                 title = {
-                    Text(
-                        text = "Remove Budget",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Column {
-                        Text("Are you sure you want to remove the budget for ${categoryAdherence.category}?")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "Current budget: KD ${categoryAdherence.budgetAmount}",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                        Text(
-                            "Amount spent: KD ${categoryAdherence.spentAmount}",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            onRemove() // Call the parent's remove function which handles finding the limitId
-                            showRemoveConfirmation = false
-                        },
-                        colors = ButtonDefaults.textButtonColors(contentColor = Error)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Remove")
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Error.copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Error,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Text(
+                            text = "Remove Budget",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
                     }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showRemoveConfirmation = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-
-        showEditForm -> {
-            AlertDialog(
-                onDismissRequest = { showEditForm = false },
-                title = {
-                    Text(
-                        text = "Edit Budget",
-                        fontWeight = FontWeight.Bold
-                    )
                 },
                 text = {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Category (read-only)
-                        OutlinedTextField(
-                            value = categoryAdherence.category,
-                            onValueChange = { },
-                            label = { Text("Category") },
-                            enabled = false,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // Amount
-                        OutlinedTextField(
-                            value = amount,
-                            onValueChange = { amount = it },
-                            label = { Text("Budget Amount (KD)") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            modifier = Modifier.fillMaxWidth(),
-                            prefix = { Text("KD ") }
-                        )
-
-                        // Renews At
-                        OutlinedTextField(
-                            value = renewsAt,
-                            onValueChange = { renewsAt = it },
-                            label = { Text("Renews At (YYYY-MM-DD)") },
-                            placeholder = { Text("2025-12-31") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // Current spending info
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = NBKBlue.copy(alpha = 0.1f)
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp)
-                            ) {
-                                Text(
-                                    text = "Current spending: KD ${categoryAdherence.spentAmount}",
-                                    fontSize = 14.sp,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "${categoryAdherence.percentageUsed.toInt()}% of current budget used",
-                                    fontSize = 12.sp,
-                                    color = TextSecondary
-                                )
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            try {
-                                val category = Category.valueOf(categoryAdherence.category.uppercase())
-                                val budgetAmount = BigDecimal(amount)
-                                onEdit(category, budgetAmount, renewsAt)
-                                showEditForm = false
-                            } catch (e: Exception) {
-                                // Handle validation errors - you might want to show a toast or error message
-                            }
-                        }
-                    ) {
-                        Text("Save Changes")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showEditForm = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-
-        else -> {
-            // Main action dialog
-            AlertDialog(
-                onDismissRequest = onDismiss,
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .background(
-                                    getCategoryColor(categoryAdherence.category).copy(alpha = 0.1f),
-                                    CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                getCategoryIcon(categoryAdherence.category),
-                                contentDescription = null,
-                                tint = getCategoryColor(categoryAdherence.category),
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = categoryAdherence.category,
-                            fontWeight = FontWeight.Bold
+                            "Are you sure you want to remove the budget for ${formatCategoryName(categoryAdherence.category)}?",
+                            fontSize = 16.sp,
+                            lineHeight = 22.sp
                         )
-                    }
-                },
-                text = {
-                    Column {
-                        // Budget info
+
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFF8FAFC)
-                            )
+                                containerColor = Error.copy(alpha = 0.05f)
+                            ),
+                            border = BorderStroke(1.dp, Error.copy(alpha = 0.2f))
                         ) {
                             Column(
                                 modifier = Modifier.padding(16.dp),
@@ -488,14 +396,14 @@ fun BudgetEditDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = "Budget:",
+                                        "Current budget:",
                                         fontSize = 14.sp,
                                         color = TextSecondary
                                     )
                                     Text(
-                                        text = "KD ${categoryAdherence.budgetAmount}",
+                                        "KD ${categoryAdherence.budgetAmount}",
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = TextPrimary
                                     )
                                 }
@@ -504,90 +412,799 @@ fun BudgetEditDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = "Spent:",
+                                        "Amount spent:",
                                         fontSize = 14.sp,
                                         color = TextSecondary
                                     )
                                     Text(
-                                        text = "KD ${categoryAdherence.spentAmount}",
+                                        "KD ${categoryAdherence.spentAmount}",
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = if (categoryAdherence.adherenceLevel == AdherenceLevel.EXCEEDED) Error else TextPrimary
-                                    )
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = "Renews:",
-                                        fontSize = 14.sp,
-                                        color = TextSecondary
-                                    )
-                                    Text(
-                                        text = categoryAdherence.renewsAt.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = TextPrimary
                                     )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "What would you like to do?",
-                            fontSize = 16.sp,
+                            "This action cannot be undone.",
+                            fontSize = 14.sp,
+                            color = Error,
                             fontWeight = FontWeight.Medium
                         )
                     }
                 },
                 confirmButton = {
-                    Column {
-                        // Edit button
-                        Button(
-                            onClick = { showEditForm = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = NBKBlue)
-                        ) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Edit Budget")
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Remove button
-                        OutlinedButton(
-                            onClick = { showRemoveConfirmation = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Error),
-                            border = BorderStroke(1.dp, Error)
-                        ) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Remove Budget")
-                        }
+                    Button(
+                        onClick = {
+                            onRemove()
+                            showRemoveConfirmation = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Error),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Remove Budget", fontWeight = FontWeight.Medium)
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                    OutlinedButton(
+                        onClick = { showRemoveConfirmation = false },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = TextPrimary
+                        )
+                    ) {
+                        Text("Keep Budget", fontWeight = FontWeight.Medium)
                     }
                 }
             )
         }
+
+        showEditForm -> {
+            Dialog(
+                onDismissRequest = { showEditForm = false },
+                properties = DialogProperties(
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
+                )
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp)),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        // Header with gradient background
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            NBKBlue.copy(alpha = 0.08f),
+                                            NBKBlue.copy(alpha = 0.02f)
+                                        )
+                                    )
+                                )
+                                .padding(24.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Edit Budget",
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
+                                    )
+                                    Text(
+                                        text = "Adjust your spending limits",
+                                        fontSize = 14.sp,
+                                        color = TextSecondary,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { showEditForm = false },
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(Color.White, CircleShape)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Close",
+                                        tint = TextSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            // Category (read-only) with enhanced visual
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = "Category",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextSecondary
+                                )
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFFF8FAFC)
+                                    ),
+                                    border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .background(
+                                                    getCategoryColor(categoryAdherence.category).copy(alpha = 0.15f),
+                                                    CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                getCategoryIcon(categoryAdherence.category),
+                                                contentDescription = null,
+                                                tint = getCategoryColor(categoryAdherence.category),
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                formatCategoryName(categoryAdherence.category),
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text(
+                                                "This cannot be changed",
+                                                fontSize = 12.sp,
+                                                color = TextSecondary
+                                            )
+                                        }
+                                        Icon(
+                                            Icons.Default.Lock,
+                                            contentDescription = null,
+                                            tint = TextSecondary.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Amount with better validation feedback
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.Bottom
+                                ) {
+                                    Text(
+                                        text = "Monthly Budget Limit",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextSecondary
+                                    )
+                                    AnimatedVisibility(visible = amount.isNotEmpty()) {
+                                        Text(
+                                            text = "Max 3 decimal places",
+                                            fontSize = 12.sp,
+                                            color = if (amountError) Error else TextSecondary.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+                                OutlinedTextField(
+                                    value = amount,
+                                    onValueChange = { newValue ->
+                                        if (isValidDecimalInput(newValue)) {
+                                            amount = newValue
+                                            amountError = false
+                                        } else {
+                                            amountError = true
+                                        }
+                                    },
+                                    label = { Text("Enter amount") },
+                                    placeholder = { Text("0.000") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    prefix = {
+                                        Text(
+                                            "KD ",
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = NBKBlue
+                                        )
+                                    },
+                                    singleLine = true,
+                                    isError = amountError || (amount.isNotEmpty() && amount.toBigDecimalOrNull() == null),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = NBKBlue,
+                                        unfocusedBorderColor = Color(0xFFE5E7EB),
+                                        errorBorderColor = Error
+                                    ),
+                                    supportingText = {
+                                        if (amountError) {
+                                            Text(
+                                                "Invalid format. Use numbers and up to 3 decimal places.",
+                                                color = Error,
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+
+                            // Renewal Day Selection with better visual cues
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "Budget Renewal Day",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = TextSecondary
+                                        )
+                                        Text(
+                                            text = "When your budget resets each month",
+                                            fontSize = 12.sp,
+                                            color = TextSecondary.copy(alpha = 0.7f),
+                                            modifier = Modifier.padding(top = 2.dp)
+                                        )
+                                    }
+                                    // Visual indicator for current day
+                                    if (selectedDay == currentDay) {
+                                        Card(
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = NBKBlue.copy(alpha = 0.1f)
+                                            ),
+                                            border = BorderStroke(1.dp, NBKBlue.copy(alpha = 0.3f))
+                                        ) {
+                                            Text(
+                                                text = "Today",
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                                fontSize = 12.sp,
+                                                color = NBKBlue,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                }
+
+                                ExposedDropdownMenuBox(
+                                    expanded = expanded,
+                                    onExpandedChange = { expanded = !expanded }
+                                ) {
+                                    OutlinedTextField(
+                                        value = when (selectedDay) {
+                                            1 -> "1st of every month"
+                                            2 -> "2nd of every month"
+                                            3 -> "3rd of every month"
+                                            21 -> "21st of every month"
+                                            22 -> "22nd of every month"
+                                            23 -> "23rd of every month"
+                                            31 -> "31st of every month"
+                                            else -> "${selectedDay}th of every month"
+                                        },
+                                        onValueChange = { },
+                                        readOnly = true,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .menuAnchor(),
+                                        label = { Text("Select day") },
+                                        leadingIcon = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(40.dp)
+                                                    .padding(8.dp)
+                                                    .background(NBKBlue.copy(alpha = 0.1f), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = selectedDay.toString(),
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = NBKBlue
+                                                )
+                                            }
+                                        },
+                                        trailingIcon = {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                        },
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = NBKBlue,
+                                            unfocusedBorderColor = Color(0xFFE5E7EB),
+                                            focusedLabelColor = NBKBlue
+                                        )
+                                    )
+
+                                    ExposedDropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier.heightIn(max = 300.dp)
+                                    ) {
+                                        (1..31).forEach { day ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Text(
+                                                            when (day) {
+                                                                1 -> "1st"
+                                                                2 -> "2nd"
+                                                                3 -> "3rd"
+                                                                21 -> "21st"
+                                                                22 -> "22nd"
+                                                                23 -> "23rd"
+                                                                31 -> "31st"
+                                                                else -> "${day}th"
+                                                            },
+                                                            fontWeight = if (selectedDay == day) FontWeight.SemiBold else FontWeight.Normal
+                                                        )
+                                                        if (day == currentDay) {
+                                                            Text(
+                                                                "Today",
+                                                                fontSize = 12.sp,
+                                                                color = NBKBlue,
+                                                                fontWeight = FontWeight.Medium
+                                                            )
+                                                        }
+                                                    }
+                                                },
+                                                onClick = {
+                                                    selectedDay = day
+                                                    expanded = false
+                                                },
+                                                leadingIcon = {
+                                                    if (selectedDay == day) {
+                                                        Icon(
+                                                            Icons.Default.Check,
+                                                            contentDescription = null,
+                                                            tint = NBKBlue,
+                                                            modifier = Modifier.size(20.dp)
+                                                        )
+                                                    }
+                                                },
+                                                colors = MenuDefaults.itemColors(
+                                                    textColor = if (selectedDay == day) NBKBlue else Color.Black
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Enhanced current spending info with progress bar
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = when {
+                                        percentageUsed > 90 -> Error.copy(alpha = 0.08f)
+                                        percentageUsed > 75 -> Color(0xFFFEF3C7)
+                                        else -> NBKBlue.copy(alpha = 0.08f)
+                                    }
+                                ),
+                                border = BorderStroke(
+                                    1.dp,
+                                    when {
+                                        percentageUsed > 90 -> Error.copy(alpha = 0.2f)
+                                        percentageUsed > 75 -> Color(0xFFF59E0B).copy(alpha = 0.3f)
+                                        else -> NBKBlue.copy(alpha = 0.2f)
+                                    }
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Info,
+                                            contentDescription = null,
+                                            tint = when {
+                                                percentageUsed > 90 -> Error
+                                                percentageUsed > 75 -> Color(0xFFF59E0B)
+                                                else -> NBKBlue
+                                            },
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Text(
+                                            text = "Current Spending Status",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = TextPrimary
+                                        )
+                                    }
+
+                                    // Progress bar
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(8.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(Color(0xFFE5E7EB))
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth(fraction = (percentageUsed.toFloat() / 100).coerceIn(0f, 1f))
+                                                    .fillMaxHeight()
+                                                    .background(
+                                                        getAdherenceLevelColor(categoryAdherence.adherenceLevel),
+                                                        RoundedCornerShape(4.dp)
+                                                    )
+                                            )
+                                        }
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "KD ${categoryAdherence.spentAmount}",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = TextPrimary
+                                            )
+                                            Text(
+                                                text = "${percentageUsed.toInt()}%",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = getAdherenceLevelColor(categoryAdherence.adherenceLevel)
+                                            )
+                                        }
+                                    }
+
+                                    Divider(color = Color(0xFFE5E7EB))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Remaining:",
+                                            fontSize = 14.sp,
+                                            color = TextSecondary
+                                        )
+                                        Text(
+                                            text = if (remainingBudget >= BigDecimal.ZERO)
+                                                "KD $remainingBudget"
+                                            else
+                                                "KD ${remainingBudget.abs()} over",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (remainingBudget >= BigDecimal.ZERO)
+                                                TextPrimary
+                                            else
+                                                Error
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Action buttons with better spacing
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = { showEditForm = false },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(48.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = TextPrimary
+                                    ),
+                                    border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                                ) {
+                                    Text("Cancel", fontWeight = FontWeight.Medium)
+                                }
+
+                                Button(
+                                    onClick = {
+                                        try {
+                                            val category = Category.valueOf(categoryAdherence.category.uppercase())
+                                            val budgetAmount = BigDecimal(amount)
+                                            if (budgetAmount > BigDecimal.ZERO) {
+                                                onEdit(category, budgetAmount, renewalDate)
+                                                showEditForm = false
+                                            }
+                                        } catch (e: Exception) {
+                                            amountError = true
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(48.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = NBKBlue),
+                                    enabled = amount.isNotEmpty() && !amountError && amount.toBigDecimalOrNull() != null
+                                ) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Save Changes", fontWeight = FontWeight.Medium)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        else -> {
+            // Enhanced main action dialog
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                containerColor = Color.White,
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(
+                                    getCategoryColor(categoryAdherence.category).copy(alpha = 0.15f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                getCategoryIcon(categoryAdherence.category),
+                                contentDescription = null,
+                                tint = getCategoryColor(categoryAdherence.category),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = formatCategoryName(categoryAdherence.category),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                            Text(
+                                text = "Budget Management",
+                                fontSize = 14.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+                },
+                text = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Budget overview card with progress indicator
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFF8FAFC)
+                            ),
+                            border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Visual progress indicator
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(Color(0xFFE5E7EB))
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(fraction = (percentageUsed.toFloat() / 100f).coerceIn(0f, 1f))
+                                            .fillMaxHeight()
+                                            .background(
+                                                getAdherenceLevelColor(categoryAdherence.adherenceLevel),
+                                                RoundedCornerShape(3.dp)
+                                            )
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text("Budget", fontSize = 12.sp, color = TextSecondary)
+                                        Text(
+                                            "KD ${categoryAdherence.budgetAmount}",
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = TextPrimary
+                                        )
+                                    }
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text("Spent", fontSize = 12.sp, color = TextSecondary)
+                                        Text(
+                                            "KD ${categoryAdherence.spentAmount}",
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (categoryAdherence.adherenceLevel == AdherenceLevel.EXCEEDED)
+                                                Error else TextPrimary
+                                        )
+                                    }
+                                }
+
+                                Divider(color = Color(0xFFE5E7EB))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.CalendarToday,
+                                            contentDescription = null,
+                                            tint = NBKBlue,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            "Renews on day ${categoryAdherence.renewsAt.dayOfMonth}",
+                                            fontSize = 14.sp,
+                                            color = TextSecondary
+                                        )
+                                    }
+
+                                    // Status badge
+                                    Card(
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = when (categoryAdherence.adherenceLevel) {
+                                                AdherenceLevel.GOOD -> Color(0xFF10B981).copy(alpha = 0.1f)
+                                                AdherenceLevel.WARNING -> Color(0xFFF59E0B).copy(alpha = 0.1f)
+                                                AdherenceLevel.EXCEEDED -> Error.copy(alpha = 0.1f)
+                                                else -> Color(0xFF10B981).copy(alpha = 0.1f) // Default case
+                                            }
+                                        ),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            when (categoryAdherence.adherenceLevel) {
+                                                AdherenceLevel.GOOD -> Color(0xFF10B981).copy(alpha = 0.3f)
+                                                AdherenceLevel.WARNING -> Color(0xFFF59E0B).copy(alpha = 0.3f)
+                                                AdherenceLevel.EXCEEDED -> Error.copy(alpha = 0.3f)
+                                                else -> Color(0xFF10B981).copy(alpha = 0.3f) // Default case
+                                            }
+                                        )
+                                    ) {
+                                        Text(
+                                            text = when (categoryAdherence.adherenceLevel) {
+                                                AdherenceLevel.GOOD -> "On Track"
+                                                AdherenceLevel.WARNING -> "Warning"
+                                                AdherenceLevel.EXCEEDED -> "Over Budget"
+                                                else -> "On Track" // Default case
+                                            },
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = when (categoryAdherence.adherenceLevel) {
+                                                AdherenceLevel.GOOD -> Color(0xFF10B981)
+                                                AdherenceLevel.WARNING -> Color(0xFFF59E0B)
+                                                AdherenceLevel.EXCEEDED -> Error
+                                                else -> Color(0xFF10B981) // Default case
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Text(
+                            text = "What would you like to do?",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                },
+                confirmButton = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            onClick = { showEditForm = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = NBKBlue),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 2.dp,
+                                pressedElevation = 4.dp
+                            )
+                        ) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Edit Budget", fontWeight = FontWeight.Medium)
+                        }
+
+                        OutlinedButton(
+                            onClick = { showRemoveConfirmation = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Error),
+                            border = BorderStroke(1.dp, Error.copy(alpha = 0.5f))
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Remove Budget", fontWeight = FontWeight.Medium)
+                        }
+
+                        TextButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                "Cancel",
+                                color = TextSecondary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                },
+                dismissButton = null
+            )
+        }
     }
 }
-
 
 
 @Composable
@@ -721,7 +1338,7 @@ fun CategoryBudgetCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = categoryAdherence.category,
+                            text = formatCategoryName(categoryAdherence.category),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary
@@ -833,7 +1450,7 @@ fun SpendingTrendCard(trend: SpendingTrendResponse) {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = trend.category,
+                            text = formatCategoryName(trend.category),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary
