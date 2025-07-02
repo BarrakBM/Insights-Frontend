@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -269,21 +270,6 @@ fun InsightsScreen(navController: NavController, paddingValues: PaddingValues) {
 }
 
 @Composable
-fun CamelIcon(
-    modifier: Modifier = Modifier,
-    tint: Color = Color.Unspecified
-) {
-    Icon(
-        painter = painterResource(id = R.drawable.nbk_kw), // You'd need to add this SVG
-        contentDescription = "Camel",
-        modifier = modifier,
-        tint = tint
-    )
-}
-
-// Replace your existing MoneyFlowCard composable with this updated version
-
-@Composable
 fun MoneyFlowCard(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
@@ -298,44 +284,76 @@ fun MoneyFlowCard(
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Icon container with fixed size and perfect centering
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(40.dp) // Slightly larger for better visual balance
                     .clip(CircleShape)
                     .background(color.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 if (icon != null) {
                     Icon(
-                        icon,
+                        imageVector = icon,
                         contentDescription = null,
                         tint = color,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(20.dp) // Consistent size for all icons
                     )
                 } else if (customIcon != null) {
-                    customIcon(color)
+                    Box(
+                        modifier = Modifier.size(20.dp), // Force consistent size
+                        contentAlignment = Alignment.Center
+                    ) {
+                        customIcon(color)
+                    }
                 }
             }
+
+            // Label text
             Text(
-                label,
+                text = label,
                 fontSize = 12.sp,
-                color = TextSecondary
+                color = TextSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
+
+            // Amount text
             Text(
-                amount,
+                text = amount,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = color
+                color = color,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
 }
 
-// And update your MoneyFlowSection usage:
+// Also update your CamelIcon to ensure it fits properly:
+@Composable
+fun CamelIcon(
+    modifier: Modifier = Modifier,
+    tint: Color = Color.Unspecified
+) {
+    Icon(
+        painter = painterResource(id = R.drawable.nbk_kw),
+        contentDescription = "Camel",
+        modifier = modifier.fillMaxSize(), // Fill the available space
+        tint = tint
+    )
+}
+
+// Updated MoneyFlowSection with consistent sizing:
 @Composable
 fun MoneyFlowSection(
     cashFlow: CashFlowCategorizedResponse?,
@@ -350,8 +368,7 @@ fun MoneyFlowSection(
                 Card(
                     modifier = Modifier
                         .weight(1f)
-                        .height(140.dp)
-                        .shadow(2.dp, RoundedCornerShape(8.dp)),
+                        .height(120.dp), // Fixed height for consistency
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
@@ -389,62 +406,13 @@ fun MoneyFlowSection(
                 modifier = Modifier.weight(1f),
                 customIcon = { tintColor ->
                     CamelIcon(
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(20.dp), // Consistent with other icons
                         tint = tintColor
                     )
                 },
                 label = "Net",
                 amount = "KD ${net.abs().setScale(3, RoundingMode.HALF_UP)}",
                 color = if (net >= BigDecimal.ZERO) PrimaryBlue else Color.Red,
-            )
-        }
-    }
-}
-
-@Composable
-fun MoneyFlowCard(
-    modifier: Modifier = Modifier,
-    icon: ImageVector,
-    label: String,
-    amount: String,
-    color: Color,
-) {
-    Card(
-        modifier = modifier.shadow(2.dp, RoundedCornerShape(8.dp)),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(color.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-            Text(
-                label,
-                fontSize = 12.sp,
-                color = TextSecondary
-            )
-            Text(
-                amount,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = color,
-                maxLines = 1,
-//                overflow = TextOverflow.Ellipsis
             )
         }
     }
