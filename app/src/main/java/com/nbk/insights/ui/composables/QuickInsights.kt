@@ -111,7 +111,7 @@ fun QuickInsights() {
                     add(
                         InsightData(
                             icon = Icons.Default.Warning,
-                            title = "Budget Alert",
+                            title = "Budget Update",
                             description = quickInsights.budgetLimitWarning,
                             color = WarningAmber
                         )
