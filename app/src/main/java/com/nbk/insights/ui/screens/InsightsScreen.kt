@@ -42,6 +42,9 @@ import com.nbk.insights.data.dtos.*
 import com.nbk.insights.ui.composables.TransactionsAndRecurringCard
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.utils.AppInitializer
+import com.nbk.insights.utils.BudgetUIUtils.getAdherenceLevelColor
+import com.nbk.insights.utils.BudgetUIUtils.getCategoryColor
+import com.nbk.insights.utils.BudgetUIUtils.getCategoryIcon
 import com.nbk.insights.viewmodels.AccountsViewModel
 import com.nbk.insights.viewmodels.RecommendationsViewModel
 import com.nbk.insights.viewmodels.TransactionsViewModel
@@ -553,8 +556,9 @@ fun BudgetItemFromData(
         label = "rotation"
     )
 
-    val icon = getBudgetCategoryIcon(categoryAdherence.category)
-    val color = getBudgetCategoryColor(categoryAdherence.adherenceLevel)
+    val icon = getCategoryIcon(categoryAdherence.category)
+    val color = getCategoryColor(categoryAdherence.category)
+    val adherenceColor = getAdherenceLevelColor(categoryAdherence.adherenceLevel)
     val status = getBudgetStatusText(categoryAdherence)
 
     Column(
@@ -610,7 +614,7 @@ fun BudgetItemFromData(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            categoryAdherence.category,
+                            formatCategoryName(categoryAdherence.category),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary
@@ -637,7 +641,7 @@ fun BudgetItemFromData(
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
-                    color = color,
+                    color = adherenceColor,
                     trackColor = Color.Gray.copy(alpha = 0.2f)
                 )
 
@@ -648,7 +652,7 @@ fun BudgetItemFromData(
                     Text(
                         status,
                         fontSize = 12.sp,
-                        color = color
+                        color = adherenceColor
                     )
 
                     if (categoryAdherence.spendingTrend != SpendingTrend.NO_DATA) {
@@ -664,8 +668,8 @@ fun BudgetItemFromData(
                                 },
                                 contentDescription = null,
                                 tint = when (categoryAdherence.spendingTrend) {
-                                    SpendingTrend.INCREASED -> WarningAmber
-                                    SpendingTrend.DECREASED -> SuccessGreen
+                                    SpendingTrend.INCREASED -> Error
+                                    SpendingTrend.DECREASED -> Success
                                     else -> TextSecondary
                                 },
                                 modifier = Modifier.size(12.dp)
@@ -869,31 +873,21 @@ fun BudgetItemFromData(
         }
     }
 }
-
-// Helper functions
-private fun getBudgetCategoryIcon(category: String): ImageVector {
-    return when (category.uppercase()) {
-        "DINING" -> Icons.Default.Restaurant
-        "GROCERIES", "FOOD_AND_GROCERIES" -> Icons.Default.ShoppingCart
-        "ENTERTAINMENT" -> Icons.Default.SportsEsports
-        "SHOPPING" -> Icons.Default.ShoppingBag
-        "TRANSPORT", "TRANSPORTATION" -> Icons.Default.DirectionsCar
-        "UTILITIES" -> Icons.Default.Bolt
-        "HEALTHCARE" -> Icons.Default.LocalHospital
-        else -> Icons.Default.Category
+internal fun formatCategoryName(category: String): String {
+    return when (category) {
+        "FOOD_AND_GROCERIES" -> "Food & Groceries"
+        "DINING" -> "Dining"
+        "ENTERTAINMENT" -> "Entertainment"
+        "SHOPPING" -> "Shopping"
+        "OTHER" -> "Other"
+        else -> category
+            .replace("_", " ")
+            .split(" ")
+            .joinToString(" ") { word ->
+                word.lowercase().replaceFirstChar { it.uppercase() }
+            }
     }
 }
-
-private fun getBudgetCategoryColor(adherenceLevel: AdherenceLevel): Color {
-    return when (adherenceLevel) {
-        AdherenceLevel.EXCELLENT -> PrimaryBlue
-        AdherenceLevel.GOOD -> SuccessGreen
-        AdherenceLevel.WARNING -> WarningAmber
-        AdherenceLevel.CRITICAL -> Color(0xFFFF6B6B)
-        AdherenceLevel.EXCEEDED -> Color.Red
-    }
-}
-
 private fun getBudgetStatusText(categoryAdherence: CategoryAdherence): String {
     val percentageUsed = categoryAdherence.percentageUsed.toInt()
     return when (categoryAdherence.adherenceLevel) {
