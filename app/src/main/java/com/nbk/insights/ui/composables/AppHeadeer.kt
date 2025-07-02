@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,31 +22,49 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.nbk.insights.ui.theme.PrimaryBlue
-import com.nbk.insights.ui.theme.TextSecondary
+import com.nbk.insights.ui.theme.NBKBlue
+import com.nbk.insights.ui.theme.TextPrimary
 
 @Composable
 fun AppHeader() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.White,
-        shadowElevation = 4.dp
+        shadowElevation = 2.dp // Reduced to match card shadows
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 8.dp), // Reduced padding
+                .padding(horizontal = 20.dp, vertical = 12.dp), // Slightly increased vertical padding
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.TrendingUp, contentDescription = null,
-                    modifier = Modifier.size(16.dp), tint = PrimaryBlue)
-                Text("Insights+", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(NBKBlue.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.TrendingUp,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = NBKBlue
+                    )
+                }
+                Text(
+                    "Insights+",
+                    fontSize = 20.sp, // Increased from 14sp
+                    fontWeight = FontWeight.SemiBold, // Changed from Medium to SemiBold
+                    color = TextPrimary
+                )
             }
-
         }
     }
 }
