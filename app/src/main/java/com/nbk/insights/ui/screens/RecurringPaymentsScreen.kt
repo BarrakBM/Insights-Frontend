@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.nbk.insights.ui.composables.AppHeaderWithBack
 import com.nbk.insights.ui.composables.RecurringPaymentCard
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.utils.AppInitializer
@@ -25,7 +26,7 @@ import com.nbk.insights.viewmodels.AccountsViewModel
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun RecurringPaymentsScreen(navController: NavController, paddingValues: PaddingValues) {
+fun RecurringPaymentsScreen(navController: NavController) {
     // Use activity-scoped ViewModels
     val activity = LocalActivity.current as ComponentActivity
     val transactionsVM: TransactionsViewModel = viewModel(
@@ -60,95 +61,107 @@ fun RecurringPaymentsScreen(navController: NavController, paddingValues: Padding
     val recurringPayments = transactionsVM.recurringPayments.value
     val isLoading = transactionsVM.isLoading.value
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundLight)
-            .padding(paddingValues)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        when {
-            // Loading state
-            isLoading || (firstAccountId != null && recurringPayments == null) -> {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+    Scaffold(
+        topBar = {
+            AppHeaderWithBack(
+                title = "Recurring Payments",
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundLight)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(
+                horizontal = 16.dp,
+                vertical = 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            when {
+                // Loading state
+                isLoading || (firstAccountId != null && recurringPayments == null) -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = NBKBlue)
-                            Text(
-                                "Analyzing transactions...",
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                CircularProgressIndicator(color = NBKBlue)
+                                Text(
+                                    "Analyzing transactions...",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            // Empty state
-            recurringPayments?.isEmpty() == true -> {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                // Empty state
+                recurringPayments?.isEmpty() == true -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    "No recurring payments detected",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    "We'll analyze your transactions to find recurring patterns",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Show recurring payments
+                recurringPayments != null -> {
+                    items(recurringPayments) { payment ->
+                        RecurringPaymentCard(
+                            payment = payment,
+                            onClick = {
+                                // Optional: Navigate to payment details
+                                // navController.navigate("payment_details/${payment.id}")
+                            }
+                        )
+                    }
+                }
+
+                // No account available
+                else -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "No recurring payments detected",
+                                "No account available",
                                 fontSize = 16.sp,
                                 color = Color.Gray
                             )
-                            Text(
-                                "We'll analyze your transactions to find recurring patterns",
-                                fontSize = 14.sp,
-                                color = Color.Gray,
-                                textAlign = TextAlign.Center
-                            )
                         }
-                    }
-                }
-            }
-
-            // Show recurring payments
-            recurringPayments != null -> {
-                items(recurringPayments) { payment ->
-                    RecurringPaymentCard(
-                        payment = payment,
-                        onClick = {
-                            // Optional: Navigate to payment details
-                            // navController.navigate("payment_details/${payment.id}")
-                        }
-                    )
-                }
-            }
-
-            // No account available
-            else -> {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "No account available",
-                            fontSize = 16.sp,
-                            color = Color.Gray
-                        )
                     }
                 }
             }
