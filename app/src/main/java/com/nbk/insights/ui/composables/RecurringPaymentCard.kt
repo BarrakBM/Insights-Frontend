@@ -111,13 +111,13 @@ fun RecurringPaymentCard(
                     color = getConfidenceColor(payment.confidenceScore).copy(alpha = 0.1f),
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
-                    Text(
-                        text = "${(payment.confidenceScore * 100).toInt()}% confidence",
-                        fontSize = 10.sp,
-                        color = getConfidenceColor(payment.confidenceScore),
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
+//                    Text(
+//                        text = "${(payment.confidenceScore * 100).toInt()}% confidence",
+//                        fontSize = 10.sp,
+//                        color = getConfidenceColor(payment.confidenceScore),
+//                        fontWeight = FontWeight.Medium,
+//                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+//                    )
                 }
             }
         }
