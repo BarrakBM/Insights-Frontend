@@ -965,7 +965,7 @@ fun AccountCard(account: Account, modifier: Modifier = Modifier) {
                         }
                     }
                     Icon(
-                        Icons.Default.ChevronRight,
+                        Icons.Default.KeyboardArrowDown,
                         contentDescription = null,
                         tint = Color.White.copy(alpha = 0.7f) // Slightly increased opacity
                     )
