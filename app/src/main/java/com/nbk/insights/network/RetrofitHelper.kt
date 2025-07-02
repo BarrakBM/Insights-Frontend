@@ -10,12 +10,14 @@ import java.lang.reflect.Type
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 
 object RetrofitHelper {
     private const val baseUrl = "http://10.0.2.2:${Constants.portNumber}/"
 
     fun getInstance(tokenManager: TokenManager): Retrofit {
         val okHttpClient = OkHttpClient.Builder()
+            .readTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(TokenInterceptor {
                 tokenManager.getToken()
             })
