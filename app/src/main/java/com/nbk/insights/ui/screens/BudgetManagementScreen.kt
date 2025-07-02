@@ -627,18 +627,34 @@ fun BudgetSummaryCard(budgetAdherence: BudgetAdherenceResponse?) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Adherence Level Badge
-            budgetAdherence?.overallAdherence?.let { level ->
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = getAdherenceLevelColor(level).copy(alpha = 0.2f)
-                ) {
-                    Text(
-                        text = level.displayName,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+            // Adherence Level Badge with percentage
+            budgetAdherence?.let { data ->
+                val percentageUsed = if (data.totalBudget > BigDecimal.ZERO) {
+                    ((data.totalSpent / data.totalBudget) * BigDecimal(100)).toInt()
+                } else 0
+
+                data.overallAdherence?.let { level ->
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = getAdherenceLevelColor(level).copy(alpha = 0.2f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = level.displayName,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "• ${percentageUsed}% used",
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
                 }
             }
         }
