@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nbk.insights.R
 import com.nbk.insights.ui.theme.*
 import com.nbk.insights.ui.screens.drawColoredShadow
 import com.nbk.insights.utils.AppInitializer
@@ -73,7 +75,25 @@ fun QuickInsights() {
         } else if (quickInsights != null) {
             // Create insights list from the DTO
             val insights = buildList {
-                // Spending comparison insight
+                // Saving insights with camel icon - FIRST
+                if (quickInsights.savingInsights.isNotBlank()) {
+                    add(
+                        InsightData(
+                            customIcon = { tintColor ->
+                                CamelIcon(
+                                    modifier = Modifier.size(20.dp),
+                                    tint = tintColor
+                                )
+                            },
+                            title = "Savings Update",
+                            description = quickInsights.savingInsights,
+                            color = if (quickInsights.spendingComparedToLastMonth.contains("less", ignoreCase = true))
+                                PrimaryBlue else Error
+                        )
+                    )
+                }
+
+                // Spending comparison insight - MIDDLE
                 if (quickInsights.spendingComparedToLastMonth.isNotBlank()) {
                     add(
                         InsightData(
@@ -81,13 +101,12 @@ fun QuickInsights() {
                                 Icons.Default.TrendingDown else Icons.Default.TrendingUp,
                             title = "Monthly Spending Update",
                             description = quickInsights.spendingComparedToLastMonth,
-                            color = if (quickInsights.spendingComparedToLastMonth.contains("less", ignoreCase = true))
-                                PrimaryBlue else Error
+                            color = SuccessGreen
                         )
                     )
                 }
 
-                // Budget limit warning
+                // Budget limit warning - LAST
                 if (quickInsights.budgetLimitWarning.isNotBlank()) {
                     add(
                         InsightData(
@@ -95,18 +114,6 @@ fun QuickInsights() {
                             title = "Budget Alert",
                             description = quickInsights.budgetLimitWarning,
                             color = WarningAmber
-                        )
-                    )
-                }
-
-                // Saving insights
-                if (quickInsights.savingInsights.isNotBlank()) {
-                    add(
-                        InsightData(
-                            icon = Icons.Default.Savings,
-                            title = "Savings Update",
-                            description = quickInsights.savingInsights,
-                            color = SuccessGreen
                         )
                     )
                 }
@@ -136,6 +143,7 @@ fun QuickInsights() {
                     items(insights) { insight ->
                         InsightCard(
                             icon = insight.icon,
+                            customIcon = insight.customIcon,
                             title = insight.title,
                             description = insight.description,
                             color = insight.color
@@ -161,11 +169,11 @@ fun QuickInsights() {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun InsightCard(
-    icon: ImageVector,
+    icon: ImageVector? = null,
+    customIcon: @Composable ((Color) -> Unit)? = null,
     title: String,
     description: String,
     color: Color
@@ -213,12 +221,24 @@ fun InsightCard(
                     .fillMaxHeight()
                     .background(color, RoundedCornerShape(2.dp))
             )
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(20.dp)
-            )
+
+            // Icon container that handles both regular and custom icons
+            Box(
+                modifier = Modifier.size(20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (icon != null) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else if (customIcon != null) {
+                    customIcon(color)
+                }
+            }
+
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -277,9 +297,23 @@ fun InsightCard(
     }
 }
 
+@Composable
+fun CamelIcon(
+    modifier: Modifier = Modifier,
+    tint: Color = Color.Unspecified
+) {
+    Icon(
+        painter = painterResource(id = R.drawable.nbk_kw),
+        contentDescription = "Camel",
+        modifier = modifier,
+        tint = tint
+    )
+}
+
 // Data class to hold insight information
 private data class InsightData(
-    val icon: ImageVector,
+    val icon: ImageVector? = null,
+    val customIcon: @Composable ((Color) -> Unit)? = null,
     val title: String,
     val description: String,
     val color: Color
