@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material3.Card
@@ -142,7 +143,7 @@ fun RelevantOfferCard(offer: OfferBrief) {
 
             // Arrow
             Icon(
-                Icons.Default.ChevronRight,
+                Icons.Default.KeyboardArrowDown,
                 contentDescription = "View offer",
                 tint = Color(0xFF1976D2), // Use the exact same darker blue as the star icon
                 modifier = Modifier.size(18.dp)

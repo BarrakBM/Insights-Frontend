@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Coffee
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Restaurant
@@ -113,7 +114,7 @@ fun CategoryOfferCard(
 
             // Arrow icon with gradient color
             Icon(
-                Icons.Default.ChevronRight,
+                Icons.Default.KeyboardArrowDown,
                 contentDescription = "View offer",
                 tint = gradientColors[1], // Use the darker color from gradient
                 modifier = Modifier.size(18.dp)

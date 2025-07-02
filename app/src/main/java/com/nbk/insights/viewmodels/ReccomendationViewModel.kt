@@ -48,10 +48,6 @@ class RecommendationsViewModel(
                     Log.w(TAG, error)
                     setError(error)
                 }
-            } catch (e: Exception) {
-                val error = "Exception fetching recommendations: ${e.message}"
-                Log.e(TAG, error, e)
-                setError(error)
             } finally {
                 setLoading(false)
             }
@@ -71,10 +67,7 @@ class RecommendationsViewModel(
                     Log.w(TAG, error)
                     setError(error)
                 }
-            } catch (e: Exception) {
-                val error = "Exception fetching offers recommendation: ${e.message}"
-                Log.e(TAG, error, e)
-                setError(error)
+
             } finally {
                 setLoading(false)
             }
@@ -167,10 +160,7 @@ class RecommendationsViewModel(
                     Log.w(TAG, error)
                     setError(error)
                 }
-            } catch (e: Exception) {
-                val error = "Exception fetching quick insights: ${e.message}"
-                Log.e(TAG, error, e)
-                setError(error)
+
             } finally {
                 setLoading(false)
             }
