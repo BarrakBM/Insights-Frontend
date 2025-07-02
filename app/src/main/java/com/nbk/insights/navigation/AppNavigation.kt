@@ -69,11 +69,8 @@ fun AppNavigation(
         }
 
         /* ─── RECURRING PAYMENTS (cross-fade) ─── */
-        composable(Screen.RecurringPayments.route,
-            enterTransition = { crossFadeIn() },
-            exitTransition  = { crossFadeOut() }
-        ) {
-            RecurringPaymentsScreen(navController, paddingValues)
+        composable(Screen.RecurringPayments.route) {
+            RecurringPaymentsScreen(navController)
             currentRoute = Screen.RecurringPayments.route
         }
 
