@@ -1344,7 +1344,7 @@ fun CategoryBudgetCard(
                             color = TextPrimary
                         )
                         Text(
-                            text = "Renews ${categoryAdherence.renewsAt.format(DateTimeFormatter.ofPattern("MMM dd"))}",
+                            text = "Renews on day ${categoryAdherence.renewsAt.dayOfMonth}",
                             fontSize = 12.sp,
                             color = TextSecondary
                         )
