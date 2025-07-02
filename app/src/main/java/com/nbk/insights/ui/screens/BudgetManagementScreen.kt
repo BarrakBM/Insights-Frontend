@@ -1593,7 +1593,7 @@ private fun getCategoryColor(category: String): Color {
         "ENTERTAINMENT" -> Color(0xFF8B5CF6)
         "FOOD_AND_GROCERIES" -> Color(0xFFF59E0B)
         "TRANSPORT", "TRANSPORTATION" -> Color(0xFF10B981)
-        else -> Color(0xFF6B7280)
+        else -> Color(0xFFF59E0B)
     }
 }
 
@@ -1604,6 +1604,6 @@ private fun getCategoryIcon(category: String): ImageVector {
         "ENTERTAINMENT" -> Icons.Default.Movie
         "FOOD_AND_GROCERIES" -> Icons.Default.ShoppingCart
         "TRANSPORT", "TRANSPORTATION" -> Icons.Default.DirectionsCar
-        else -> Icons.Default.MoreHoriz
+        else -> Icons.Default.ShoppingCart
     }
 }
